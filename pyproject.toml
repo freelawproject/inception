@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "inception"
+version = "2.0.0"
+description = "A high-performance FastAPI service for generating text embeddings"
+authors = ["Free Law Project <info@free.law>"]
+readme = "README.md"
+packages = [{include = "inception"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+sentence-transformers = "^3.0.0"
+pydantic = "^2.4.2"
+pydantic-settings = "^2.0.3"
+nltk = "^3.8.1"
+torch = "2.1.0+cu121"  # Match CUDA 12.1
+numpy = "^1.26.1"
+gunicorn = "^21.2.0"
+prometheus-client = "^0.19.0"
+sentry-sdk = {extras = ["fastapi"], version = "^1.32.0"}
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.11.0"
+mypy = "^1.7.0"
+pytest = "^7.4.3"
+pytest-cov = "^4.1.0"
+httpx = "^0.25.1"
+flake8 = "^6.1.0"
+pytest-mock = "^3.12.0"  # For monkeypatch testing
+pytest-asyncio = "^0.21.1"  # For async test support
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
