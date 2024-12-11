@@ -22,7 +22,7 @@ The service is optimized to handle two main use cases:
 
 This project uses Poetry for dependency management. To get started:
 
-1. Install Poetry:
+1. Install Poetry:[.zshrc](../../../.zshrc)
    ```bash
    curl -sSL https://install.python-poetry.org | python3 -
    ```

@@ -2,7 +2,10 @@ version: "3.8"
 
 services:
   embedding-service:
-    build: .
+    build:
+      context: .
+      args:
+        TARGET_ENV: dev
     ports:
       - "8005:8005"
     environment:
@@ -12,19 +15,4 @@ services:
       - ENABLE_METRICS=true
       - SENTRY_DSN=
     volumes:
-      - .:/app  # Mount current directory for development
-    command: >
-      poetry run uvicorn embed_endpoint:app 
-      --host 0.0.0.0 
-      --port 8005 
-      --reload  # Enable auto-reload for development
-
-  test:
-    build: .
-    volumes:
       - .:/app
-    command: >
-      poetry run pytest tests/ 
-      -v 
-      --cov=. 
-      --cov-report=term-missing

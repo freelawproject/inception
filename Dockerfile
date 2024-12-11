@@ -1,10 +1,10 @@
 # Use NVIDIA CUDA base image
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 as base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    POETRY_VERSION=1.6.1 \
+    POETRY_VERSION=1.8.5 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1
@@ -13,15 +13,11 @@ ENV PYTHONUNBUFFERED=1 \
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
 # Install Python and system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        python3.10 \
-        python3-pip \
-        python3.10-dev \
-        python3.10-venv \
-        curl \
-        build-essential \
-        git \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3-pip \
+    python3.10-venv \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Make python3.10 the default python
@@ -34,27 +30,19 @@ RUN curl -sSL https://install.python-poetry.org | python3 - \
 WORKDIR /app
 
 # Copy all necessary files
-COPY pyproject.toml poetry.lock README.md ./
-
+COPY pyproject.toml poetry.lock README.md docker-entrypoint.sh ./
 # Copy source code
 COPY inception/ inception/
 
-# Install dependencies
-RUN poetry install --no-interaction --no-ansi
+# Use an ARG to control build environment
+ARG TARGET_ENV=dev
+ENV TARGET_ENV=${TARGET_ENV}
 
-EXPOSE 8005
+RUN if [ "$TARGET_ENV" = "prod" ]; then \
+      poetry install --with gpu --no-interaction --no-ansi; \
+    else \
+      poetry install --no-interaction --no-ansi; \
+    fi
 
-ENV EMBEDDING_WORKERS=4
-
-# Use shell form to allow environment variable expansion
-CMD poetry run gunicorn \
-    --workers=$EMBEDDING_WORKERS \
-    --worker-class=uvicorn.workers.UvicornWorker \
-    --bind=0.0.0.0:8005 \
-    --timeout=300 \
-    --access-logfile=- \
-    --error-logfile=- \
-    inception.embed_endpoint:app
-
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8005/health || exit 1
+RUN chmod +x /app/docker-entrypoint.sh
+ENTRYPOINT ["/bin/sh","/app/docker-entrypoint.sh"]

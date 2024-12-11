@@ -3,11 +3,11 @@ Tests for the embedding service API endpoints and functionality.
 Covers health checks, embedding generation, input validation, batch processing,
 GPU memory management, and text processing.
 """
-
 import pytest
 from fastapi.testclient import TestClient
-from inception.inception.embed_endpoint import app, Settings, EmbeddingService
-import torch
+from inception.main import app
+from inception.embedding_service import EmbeddingService
+from inception.config import Settings
 
 # Mark all tests with appropriate categories
 pytestmark = [
@@ -51,7 +51,8 @@ class TestHealthEndpoints:
     @pytest.mark.health
     def test_health_check(self, client):
         """Verify health check endpoint returns correct status and information."""
-        response = client.get("/health")
+        with TestClient(app) as client:
+            response = client.get("/health")
         assert response.status_code == 200
         data = response.json()
         
@@ -69,7 +70,7 @@ class TestHealthEndpoints:
     @pytest.mark.health
     def test_service_unavailable(self, client, monkeypatch):
         """Verify appropriate response when service is not initialized."""
-        monkeypatch.setattr("embed_endpoint.embedding_service", None)
+        monkeypatch.setattr("inception.embed_endpoint.embedding_service", None)
         response = client.post(
             "/api/v1/embed/query",
             json={"text": "test"}
@@ -84,10 +85,11 @@ class TestEmbeddingGeneration:
     @pytest.mark.embedding_generation
     def test_query_embedding(self, client):
         """Test query embedding generation."""
-        response = client.post(
-            "/api/v1/embed/query",
-            json={"text": "What constitutes copyright infringement?"}
-        )
+        with TestClient(app) as client:
+            response = client.post(
+                "/api/v1/embed/query",
+                json={"text": "What constitutes copyright infringement?"}
+            )
         assert response.status_code == 200
         data = response.json()
         assert "embedding" in data
@@ -96,11 +98,12 @@ class TestEmbeddingGeneration:
     @pytest.mark.embedding_generation
     def test_text_embedding(self, client, sample_text):
         """Test document embedding generation."""
-        response = client.post(
-            "/api/v1/embed/text",
-            data=sample_text,
-            headers={"Content-Type": "text/plain"}
-        )
+        with TestClient(app) as client:
+            response = client.post(
+                "/api/v1/embed/text",
+                data=sample_text,
+                headers={"Content-Type": "text/plain"}
+            )
         assert response.status_code == 200
         data = response.json()
         assert "embeddings" in data
@@ -115,7 +118,8 @@ class TestEmbeddingGeneration:
                 {"id": 2, "text": "Second test document"}
             ]
         }
-        response = client.post("/api/v1/embed/batch", json=batch_request)
+        with TestClient(app) as client:
+            response = client.post("/api/v1/embed/batch", json=batch_request)
         assert response.status_code == 200
         data = response.json()
         
