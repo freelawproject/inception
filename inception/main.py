@@ -1,9 +1,9 @@
 import asyncio
 import os
+from contextlib import asynccontextmanager
 
 import nltk
 import sentry_sdk
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -14,7 +14,6 @@ from inception import routes
 from inception.config import settings
 from inception.embedding_service import EmbeddingService
 from inception.utils import logger
-
 
 try:
     nltk.data.find("tokenizers/punkt_tab")
@@ -34,7 +33,7 @@ embedding_service = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI)->None:
+async def lifespan(app: FastAPI) -> None:
     """Handle application startup and shutdown.
 
     :param app: The FastAPI application instance.
@@ -51,11 +50,15 @@ async def lifespan(app: FastAPI)->None:
                 f"Attempting to initialize embedding service (attempt {attempt + 1}/{max_retries})"
             )
             model = SentenceTransformer(settings.transformer_model_name)
-            embedding_service = EmbeddingService(model=model, max_words=settings.max_words)
+            embedding_service = EmbeddingService(
+                model=model, max_words=settings.max_words
+            )
             logger.info("Embedding service initialized successfully")
             break
         except Exception as e:
-            logger.warning(f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+            logger.warning(
+                f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}"
+            )
             if attempt < max_retries - 1:
                 logger.info(f"Retrying in {retry_delay} seconds...")
                 await asyncio.sleep(retry_delay)
@@ -81,7 +84,7 @@ app = FastAPI(
     title="Inception v0",
     description="Service for generating embeddings from queries and opinions",
     version="0.0.1",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS
@@ -121,8 +124,6 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 app.include_router(routes.api_router)
-
-
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TextRequest(BaseModel):
@@ -6,7 +6,7 @@ class TextRequest(BaseModel):
     text: str = Field(..., description="The text content of the opinion")
 
     model_config = ConfigDict(
-        json_schema_extra = {
+        json_schema_extra={
             "example": {
                 "id": 1,
                 "text": "The Supreme Court's decision in Brown v. Board of Education was a landmark ruling.",
@@ -22,7 +22,7 @@ class BatchTextRequest(BaseModel):
     )
 
     model_config = ConfigDict(
-        json_schema_extra = {
+        json_schema_extra={
             "example": {
                 "documents": [
                     {
@@ -49,7 +49,7 @@ class ChunkEmbedding(BaseModel):
     embedding: list[float]
 
     model_config = ConfigDict(
-        json_schema_extra = {
+        json_schema_extra={
             "example": {
                 "chunk_number": 1,
                 "chunk": "This is a sample chunk of text from a legal opinion.",
@@ -64,7 +64,7 @@ class TextResponse(BaseModel):
     embeddings: list[ChunkEmbedding]
 
     model_config = ConfigDict(
-        json_schema_extra = {
+        json_schema_extra={
             "example": {
                 "id": 1,
                 "embeddings": [

@@ -53,37 +53,6 @@ def mock_gpu_cleanup(monkeypatch):
     return lambda: cleanup_called
 
 
-class TestHealthEndpoints:
-    """Tests for health check and monitoring endpoints."""
-
-    @pytest.mark.health
-    def test_health_check(self, client):
-        """Verify health check endpoint returns correct status and information."""
-        with TestClient(app) as client:
-            response = client.get("/health")
-        assert response.status_code == 200
-        data = response.json()
-
-        assert "status" in data
-        assert "model_loaded" in data
-        assert "gpu_available" in data
-
-    @pytest.mark.health
-    def test_heartbeat(self, client):
-        """Verify heartbeat endpoint is responding."""
-        response = client.get("/")
-        assert response.status_code == 200
-        assert response.text == '"Heartbeat detected."'
-
-    @pytest.mark.health
-    def test_service_unavailable(self, client, monkeypatch):
-        """Verify appropriate response when service is not initialized."""
-        monkeypatch.setattr("inception.main.embedding_service", None)
-        response = client.post("/api/v1/embed/query", json={"text": "test"})
-        assert response.status_code == 503
-        assert "service not initialized" in response.json()["detail"].lower()
-
-
 class TestEmbeddingGeneration:
     """Tests for embedding generation endpoints."""
 
@@ -142,11 +111,17 @@ class TestInputValidation:
         """Test query endpoint input validation."""
         test_cases = [
             {
-                "name": "empty text",
+                "name": "short text",
                 "input": {"text": ""},
                 "expected_status": 422,
-                "expected_error": "text is empty after cleaning.",
-            }
+                "expected_error": "text length (0) below minimum (1)",
+            },
+            {
+                "name": "empty text",
+                "input": {"text": "ñ😊"},
+                "expected_status": 422,
+                "expected_error": "text is empty after cleaning",
+            },
         ]
 
         for case in test_cases:

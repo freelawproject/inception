@@ -1,6 +1,5 @@
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
