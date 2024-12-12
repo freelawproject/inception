@@ -154,7 +154,7 @@ For development setup and testing instructions, see [DEVELOPING.md](DEVELOPING.m
 
 ## Contributing
 
-We welcome contributions to improve the embedding service! 
+We welcome contributions to improve the embedding service!
 
 1. For development setup, see [DEVELOPING.md](DEVELOPING.md)
 2. For submitting changes, see [SUBMITTING.md](SUBMITTING.md)
@@ -167,10 +167,10 @@ Please ensure you:
   ```bash
   # Run tests
   docker-compose -f docker-compose.dev.yml up test
-  
+
   # Test endpoints
   ./test_service.sh
-  
+
   # Test Python client
   python examples/client_example.py
   ```

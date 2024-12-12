@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
     python3-pip \
     python3.10-venv \
-    curl \
+    # For installing poetry and git-based deps
+    curl git \
     && rm -rf /var/lib/apt/lists/*
 
 # Make python3.10 the default python

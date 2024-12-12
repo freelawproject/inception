@@ -1,4 +1,10 @@
+import logging
 import re
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 def clean_text_for_json(text: str) -> str:
@@ -12,7 +18,11 @@ def clean_text_for_json(text: str) -> str:
 
     try:
         # Remove null bytes and other control characters except newlines and tabs
-        text = "".join(char for char in text if char == "\n" or char == "\t" or (ord(char) >= 32 and ord(char) < 127))
+        text = "".join(
+            char
+            for char in text
+            if char == "\n" or char == "\t" or (ord(char) >= 32 and ord(char) < 127)
+        )
 
         # Replace tabs with spaces
         text = text.replace("\t", " ")
@@ -41,7 +51,7 @@ def preprocess_text(text: str) -> str:
     try:
         cleaned_text = clean_text_for_json(text)
         if not cleaned_text:
-            raise ValueError("Text is empty after cleaning")
+            raise ValueError("Text is empty after cleaning.")
 
         return cleaned_text
     except Exception as e:

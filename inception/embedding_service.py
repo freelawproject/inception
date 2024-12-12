@@ -1,20 +1,14 @@
-import time
 import asyncio
-import torch
-import logging
-from sentence_transformers import SentenceTransformer
-from nltk.tokenize import sent_tokenize
-from inception.schemas import ChunkEmbedding
-from inception.config import settings
-from inception.utils import preprocess_text
-from inception.metrics import MODEL_LOAD_TIME, CHUNK_COUNT
+import time
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+import torch
+from nltk.tokenize import sent_tokenize
+from sentence_transformers import SentenceTransformer
+
+from inception.config import settings
+from inception.metrics import CHUNK_COUNT, MODEL_LOAD_TIME
+from inception.schemas import ChunkEmbedding
+from inception.utils import logger, preprocess_text
 
 
 class EmbeddingService:
@@ -22,7 +16,11 @@ class EmbeddingService:
         start_time = time.time()
         try:
             self.model = model
-            device = "cpu" if settings.force_cpu else ("cuda" if torch.cuda.is_available() else "cpu")
+            device = (
+                "cpu"
+                if settings.force_cpu
+                else ("cuda" if torch.cuda.is_available() else "cpu")
+            )
             self.gpu_model = model.to(device)
             self.max_words = max_words
             if device == "cuda":
@@ -72,21 +70,16 @@ class EmbeddingService:
         # Preprocess the query text
         processed_text = preprocess_text(text)
 
-        print("processed_text", processed_text)
-
         # Use run_in_executor to make the synchronous encode call async
         embedding = await asyncio.get_event_loop().run_in_executor(
             None,
-            lambda: self.gpu_model.encode(
-                sentences=[processed_text],
-                batch_size=1
-            )
+            lambda: self.gpu_model.encode(sentences=[processed_text], batch_size=1),
         )
-        print("<<<< embedding", embedding)
         return embedding[0].tolist()
 
-
-    async def generate_text_embeddings(self, texts: list[str]) -> list[list[ChunkEmbedding]]:
+    async def generate_text_embeddings(
+        self, texts: list[str]
+    ) -> list[list[ChunkEmbedding]]:
         """Generate embeddings for a list of texts"""
         if not texts:
             raise ValueError("Empty text list")
@@ -104,11 +97,7 @@ class EmbeddingService:
 
         # Generate embeddings
         embeddings = await asyncio.get_event_loop().run_in_executor(
-            None,
-            lambda: self.gpu_model.encode(
-                sentences=all_chunks,
-                batch_size=8
-            )
+            None, lambda: self.gpu_model.encode(sentences=all_chunks, batch_size=8)
         )
 
         # Process results
@@ -118,17 +107,18 @@ class EmbeddingService:
             for j in range(count):
                 chunk = all_chunks[start_index + j]
                 embedding = embeddings[start_index + j]
-                text_embeddings.append(ChunkEmbedding(
-                    chunk_number=j + 1,
-                    chunk=chunk,
-                    embedding=embedding.tolist()
-                ))
+                text_embeddings.append(
+                    ChunkEmbedding(
+                        chunk_number=j + 1, chunk=chunk, embedding=embedding.tolist()
+                    )
+                )
             all_embeddings.append(text_embeddings)
             start_index += count
 
         return all_embeddings
 
-    def cleanup_gpu_memory(self):
+    @staticmethod
+    def cleanup_gpu_memory():
         """Clean up GPU memory if available"""
         if torch.cuda.is_available():
             torch.cuda.empty_cache()

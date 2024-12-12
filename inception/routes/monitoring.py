@@ -1,11 +1,12 @@
 import torch
 from fastapi import APIRouter, HTTPException, Response
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-from inception.config import settings
 from inception import main
+from inception.config import settings
 
 router = APIRouter()
+
 
 @router.get("/")
 async def heartbeat():
@@ -20,7 +21,7 @@ async def health_check():
     return {
         "status": "healthy" if main.embedding_service else "service_unavailable",
         "model_loaded": main.embedding_service is not None,
-        "gpu_available": gpu_available and not settings.force_cpu
+        "gpu_available": gpu_available and not settings.force_cpu,
     }
 
 

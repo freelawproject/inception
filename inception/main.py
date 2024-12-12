@@ -1,22 +1,23 @@
-import logging
-import os
 import asyncio
-import nltk
-from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
-from fastapi.middleware.cors import CORSMiddleware
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentence_transformers import SentenceTransformer
+import os
 
-from inception.config import settings
+import nltk
+import sentry_sdk
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from sentence_transformers import SentenceTransformer
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+
 from inception import routes
+from inception.config import settings
 from inception.embedding_service import EmbeddingService
+from inception.utils import logger
 
 app = FastAPI(
     title="Inception v0",
     description="Service for generating embeddings from queries and opinions",
-    version="0.0.1"
+    version="0.0.1",
 )
 
 # CORS
@@ -28,11 +29,6 @@ app.add_middleware(
     allow_headers=os.getenv("ALLOWED_HEADERS", "*").split(","),
 )
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
 
 try:
     nltk.data.find("tokenizers/punkt_tab")
@@ -50,6 +46,7 @@ sentry_sdk.init(
 
 embedding_service = None
 
+
 @app.on_event("startup")
 async def startup_event():
     global embedding_service
@@ -58,9 +55,13 @@ async def startup_event():
 
     for attempt in range(max_retries):
         try:
-            logger.info(f"Attempting to initialize embedding service (attempt {attempt + 1}/{max_retries})")
+            logger.info(
+                f"Attempting to initialize embedding service (attempt {attempt + 1}/{max_retries})"
+            )
             model = SentenceTransformer(settings.transformer_model_name)
-            embedding_service = EmbeddingService(model=model, max_words=settings.max_words)
+            embedding_service = EmbeddingService(
+                model=model, max_words=settings.max_words
+            )
             logger.info("Embedding service initialized successfully")
             return
         except Exception as e:
@@ -90,7 +91,7 @@ def custom_openapi():
                     "example": "A very long opinion goes here.\nIt can span multiple lines.\nEach line will be preserved."
                 }
             },
-            "required": True
+            "required": True,
         }
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -112,7 +113,7 @@ async def shutdown_event():
         logger.error(f"Error during shutdown: {str(e)}")
 
 
-
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8005)
