@@ -16,5 +16,6 @@ else
     exec poetry run uvicorn inception.main:app \
         --host 0.0.0.0 \
         --port 8005 \
-        --log-level debug
+        --log-level debug \
+        --reload
 fi

@@ -1,7 +1,9 @@
 from prometheus_client import Counter, Histogram
 
 REQUEST_COUNT = Counter(
-    "inception_requests_total", "Total number of embedding requests", ["endpoint"]
+    "inception_requests_total",
+    "Total number of embedding requests",
+    ["endpoint"],
 )
 
 PROCESSING_TIME = Histogram(
@@ -12,11 +14,15 @@ PROCESSING_TIME = Histogram(
 )
 
 ERROR_COUNT = Counter(
-    "inception_errors_total", "Total number of errors", ["endpoint", "error_type"]
+    "inception_errors_total",
+    "Total number of errors",
+    ["endpoint", "error_type"],
 )
 
 CHUNK_COUNT = Counter(
-    "inception_chunks_total", "Total number of text chunks processed", ["endpoint"]
+    "inception_chunks_total",
+    "Total number of text chunks processed",
+    ["endpoint"],
 )
 
 MODEL_LOAD_TIME = Histogram(

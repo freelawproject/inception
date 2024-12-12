@@ -25,12 +25,16 @@ def test_settings():
 
 @pytest.fixture
 def test_model():
-    return SentenceTransformer("sentence-transformers/multi-qa-mpnet-base-dot-v1")
+    return SentenceTransformer(
+        "sentence-transformers/multi-qa-mpnet-base-dot-v1"
+    )
 
 
 @pytest.fixture
 def test_service(test_model, test_settings):
-    return EmbeddingService(model=test_model, max_words=test_settings.max_words)
+    return EmbeddingService(
+        model=test_model, max_words=test_settings.max_words
+    )
 
 
 @pytest.fixture

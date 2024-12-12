@@ -73,7 +73,9 @@ class EmbeddingService:
         # Use run_in_executor to make the synchronous encode call async
         embedding = await asyncio.get_event_loop().run_in_executor(
             None,
-            lambda: self.gpu_model.encode(sentences=[processed_text], batch_size=1),
+            lambda: self.gpu_model.encode(
+                sentences=[processed_text], batch_size=1
+            ),
         )
         return embedding[0].tolist()
 
@@ -97,7 +99,8 @@ class EmbeddingService:
 
         # Generate embeddings
         embeddings = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: self.gpu_model.encode(sentences=all_chunks, batch_size=8)
+            None,
+            lambda: self.gpu_model.encode(sentences=all_chunks, batch_size=8),
         )
 
         # Process results
@@ -109,7 +112,9 @@ class EmbeddingService:
                 embedding = embeddings[start_index + j]
                 text_embeddings.append(
                     ChunkEmbedding(
-                        chunk_number=j + 1, chunk=chunk, embedding=embedding.tolist()
+                        chunk_number=j + 1,
+                        chunk=chunk,
+                        embedding=embedding.tolist(),
                     )
                 )
             all_embeddings.append(text_embeddings)

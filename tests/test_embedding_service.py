@@ -13,10 +13,9 @@ from inception.embedding_service import EmbeddingService
 from inception.main import app
 
 # Mark all tests with appropriate categories
-pytestmark = [pytest.mark.asyncio, pytest.mark.embedding]
+pytestmark = [pytest.mark.embedding]
 
 
-# --- Fixtures ---
 @pytest.fixture
 def client() -> TestClient:
     """Create a test client for the FastAPI application."""
@@ -48,12 +47,12 @@ def mock_gpu_cleanup(monkeypatch):
         cleanup_called = True
 
     monkeypatch.setattr(
-        "inception.embedding_service.EmbeddingService.cleanup_gpu_memory", mock_cleanup
+        "inception.embedding_service.EmbeddingService.cleanup_gpu_memory",
+        mock_cleanup,
     )
     return lambda: cleanup_called
 
 
-# --- Health Check Tests ---
 class TestHealthEndpoints:
     """Tests for health check and monitoring endpoints."""
 
@@ -85,7 +84,6 @@ class TestHealthEndpoints:
         assert "service not initialized" in response.json()["detail"].lower()
 
 
-# --- Embedding Generation Tests ---
 class TestEmbeddingGeneration:
     """Tests for embedding generation endpoints."""
 
@@ -108,7 +106,7 @@ class TestEmbeddingGeneration:
         with TestClient(app) as client:
             response = client.post(
                 "/api/v1/embed/text",
-                data=sample_text,
+                content=sample_text,
                 headers={"Content-Type": "text/plain"},
             )
         assert response.status_code == 200
@@ -136,7 +134,6 @@ class TestEmbeddingGeneration:
         assert all(doc["id"] in [1, 2] for doc in data)
 
 
-# --- Input Validation Tests ---
 class TestInputValidation:
     """Tests for input validation."""
 
@@ -154,7 +151,9 @@ class TestInputValidation:
 
         for case in test_cases:
             with TestClient(app) as client:
-                response = client.post("/api/v1/embed/query", json=case["input"])
+                response = client.post(
+                    "/api/v1/embed/query", json=case["input"]
+                )
             assert (
                 response.status_code == case["expected_status"]
             ), f"Failed on: {case['name']}"
@@ -182,7 +181,7 @@ class TestInputValidation:
             with TestClient(app) as client:
                 response = client.post(
                     "/api/v1/embed/text",
-                    data=case["input"],
+                    content=case["input"],
                     headers={"Content-Type": "text/plain"},
                 )
             assert (
@@ -226,32 +225,34 @@ class TestInputValidation:
 
         for case in test_cases:
             with TestClient(app) as client:
-                response = client.post("/api/v1/embed/batch", json=case["input"])
+                response = client.post(
+                    "/api/v1/embed/batch", json=case["input"]
+                )
             assert (
                 response.status_code == case["expected_status"]
             ), f"Failed on: {case['name']}"
             assert case["expected_error"] in response.json()["detail"].lower()
 
 
-# --- GPU Memory Management Tests ---
 class TestGPUMemoryManagement:
     """Tests for GPU memory management."""
 
     @pytest.mark.gpu
     def test_gpu_cleanup(self, client, mock_gpu_cleanup, sample_text):
         """Test GPU memory cleanup after processing large texts."""
-        long_text = sample_text * 100  # Make text long enough to trigger cleanup
+        long_text = (
+            sample_text * 100
+        )  # Make text long enough to trigger cleanup
         with TestClient(app) as client:
             response = client.post(
                 "/api/v1/embed/text",
-                data=long_text,
+                content=long_text,
                 headers={"Content-Type": "text/plain"},
             )
         assert response.status_code == 200
         assert mock_gpu_cleanup(), "GPU memory cleanup was not called"
 
 
-# --- Text Processing Tests ---
 class TestTextProcessing:
     """Tests for text processing functionality."""
 
@@ -262,7 +263,9 @@ class TestTextProcessing:
 
         # Basic properties
         assert len(chunks) > 0, "No chunks were generated"
-        assert all(isinstance(chunk, str) for chunk in chunks), "Non-string chunk found"
+        assert all(
+            isinstance(chunk, str) for chunk in chunks
+        ), "Non-string chunk found"
         assert all(
             len(chunk.split()) <= test_service.max_words for chunk in chunks
         ), "Chunk exceeds maximum word limit"

@@ -2,7 +2,8 @@ import logging
 import re
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,9 @@ def clean_text_for_json(text: str) -> str:
         text = "".join(
             char
             for char in text
-            if char == "\n" or char == "\t" or (ord(char) >= 32 and ord(char) < 127)
+            if char == "\n"
+            or char == "\t"
+            or (ord(char) >= 32 and ord(char) < 127)
         )
 
         # Replace tabs with spaces

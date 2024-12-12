@@ -1,17 +1,18 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TextRequest(BaseModel):
     id: int
     text: str = Field(..., description="The text content of the opinion")
 
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "id": 1,
                 "text": "The Supreme Court's decision in Brown v. Board of Education was a landmark ruling.",
             }
         }
+    )
 
 
 class BatchTextRequest(BaseModel):
@@ -20,7 +21,7 @@ class BatchTextRequest(BaseModel):
         description="List of documents to process. Each document should have an ID and text content.",
     )
 
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "documents": [
@@ -39,6 +40,7 @@ This case expanded judicial power significantly.""",
                 ]
             }
         }
+    )
 
 
 class ChunkEmbedding(BaseModel):
@@ -46,7 +48,7 @@ class ChunkEmbedding(BaseModel):
     chunk: str
     embedding: list[float]
 
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "chunk_number": 1,
@@ -54,13 +56,14 @@ class ChunkEmbedding(BaseModel):
                 "embedding": [0.123, 0.456, 0.789],
             }
         }
+    )
 
 
 class TextResponse(BaseModel):
     id: int | None = None
     embeddings: list[ChunkEmbedding]
 
-    class Config:
+    model_config = ConfigDict(
         json_schema_extra = {
             "example": {
                 "id": 1,
@@ -78,10 +81,19 @@ class TextResponse(BaseModel):
                 ],
             }
         }
+    )
 
 
 class QueryRequest(BaseModel):
     text: str
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "text": "The Supreme Court's decision in Brown v. Board of Education was a landmark ruling.",
+            }
+        }
+    )
 
 
 class QueryResponse(BaseModel):

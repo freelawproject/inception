@@ -19,7 +19,9 @@ async def health_check():
     """Detailed health check endpoint"""
     gpu_available = torch.cuda.is_available()
     return {
-        "status": "healthy" if main.embedding_service else "service_unavailable",
+        "status": (
+            "healthy" if main.embedding_service else "service_unavailable"
+        ),
         "model_loaded": main.embedding_service is not None,
         "gpu_available": gpu_available and not settings.force_cpu,
     }
