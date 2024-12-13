@@ -4,6 +4,8 @@ Covers health checks, embedding generation, input validation, batch processing,
 GPU memory management, and text processing.
 """
 
+from http import HTTPStatus
+
 import pytest
 from fastapi.testclient import TestClient
 from sentence_transformers import SentenceTransformer
@@ -17,17 +19,14 @@ pytestmark = [pytest.mark.embedding]
 
 
 @pytest.fixture
-def client() -> TestClient:
-    """Create a test client for the FastAPI application."""
-    return TestClient(app)
-
-
-@pytest.fixture
 def test_service() -> EmbeddingService:
     """Create an instance of EmbeddingService for testing."""
     model = SentenceTransformer(settings.transformer_model_name)
-    max_words = settings.max_words
-    return EmbeddingService(model=model, max_words=max_words)
+    return EmbeddingService(
+        model=model,
+        max_words=settings.max_words,
+        processing_batch_size=settings.processing_batch_size,
+    )
 
 
 @pytest.fixture
@@ -64,7 +63,7 @@ class TestEmbeddingGeneration:
                 "/api/v1/embed/query",
                 json={"text": "What constitutes copyright infringement?"},
             )
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         data = response.json()
         assert "embedding" in data
         assert isinstance(data["embedding"], list)
@@ -78,7 +77,7 @@ class TestEmbeddingGeneration:
                 content=sample_text,
                 headers={"Content-Type": "text/plain"},
             )
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         data = response.json()
         assert "embeddings" in data
         assert isinstance(data["embeddings"], list)
@@ -94,7 +93,7 @@ class TestEmbeddingGeneration:
         }
         with TestClient(app) as client:
             response = client.post("/api/v1/embed/batch", json=batch_request)
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         data = response.json()
 
         assert isinstance(data, list)
@@ -109,18 +108,26 @@ class TestInputValidation:
     @pytest.mark.validation
     def test_query_embedding_validation(self, client):
         """Test query endpoint input validation."""
+
+        long_query = "Pellentesque tellus felis cursus id velit ac feugiat rutrum massa Mauris dapibus fermentum sagittis Donec viverra mauris a velit"
         test_cases = [
             {
                 "name": "short text",
                 "input": {"text": ""},
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "text length (0) below minimum (1)",
             },
             {
                 "name": "empty text",
                 "input": {"text": "ñ😊"},
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "text is empty after cleaning",
+            },
+            {
+                "name": "query too long",
+                "input": {"text": long_query},
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
+                "expected_error": f"query length ({len(long_query)}) exceeds maximum ({settings.max_query_length})",
             },
         ]
 
@@ -141,13 +148,13 @@ class TestInputValidation:
             {
                 "name": "empty text",
                 "input": "",
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "text length (0) below minimum (1)",
             },
             {
                 "name": "invalid UTF-8",
                 "input": bytes([0xFF, 0xFE, 0xFD]),
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "invalid utf-8",
             },
         ]
@@ -176,13 +183,13 @@ class TestInputValidation:
                         for i in range(settings.max_batch_size + 1)
                     ]
                 },
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "batch size exceeds maximum of 100 documents",
             },
             {
                 "name": "empty batch",
                 "input": {"documents": []},
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "empty text list",
             },
             {
@@ -193,7 +200,7 @@ class TestInputValidation:
                         {"id": 2, "text": "Valid document"},
                     ]
                 },
-                "expected_status": 422,
+                "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
                 "expected_error": "document 1",
             },
         ]
@@ -224,7 +231,7 @@ class TestGPUMemoryManagement:
                 content=long_text,
                 headers={"Content-Type": "text/plain"},
             )
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert mock_gpu_cleanup(), "GPU memory cleanup was not called"
 
 

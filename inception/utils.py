@@ -1,5 +1,6 @@
 import logging
 import re
+from http import HTTPStatus
 
 from fastapi import HTTPException
 from torch.cuda import OutOfMemoryError
@@ -87,10 +88,18 @@ def validate_text_length(
             error_msg = f"Document {doc_id}: Text length ({text_length}) below minimum ({settings.min_text_length})."
         raise ValueError(error_msg)
 
-    if text_length > settings.max_text_length:
-        ERROR_COUNT.labels(endpoint=endpoint, error_type="text_too_long").inc()
+    max_length = (
+        settings.max_query_length
+        if endpoint == "query"
+        else settings.max_text_length
+    )
+    error_type = "query_too_long" if endpoint == "query" else "text_too_long"
+    label = "Query" if endpoint == "query" else "Text"
+    # Check if the text/query length exceeds the maximum allowed length
+    if text_length > max_length:
+        ERROR_COUNT.labels(endpoint=endpoint, error_type=error_type).inc()
         raise ValueError(
-            f"Text length ({text_length}) exceeds maximum ({settings.max_text_length})"
+            f"{label} length ({text_length}) exceeds maximum ({max_length})"
         )
 
 
@@ -103,24 +112,33 @@ def handle_exception(e: Exception, endpoint: str) -> None:
     :raises HTTPException: Re-raised if needed with appropriate status code and message.
     """
 
-    if isinstance(e, UnicodeDecodeError):
-        ERROR_COUNT.labels(endpoint=endpoint, error_type="decode_error").inc()
-        raise HTTPException(
-            status_code=422, detail="Invalid UTF-8 encoding in text"
-        )
-    elif isinstance(e, ValueError):
-        # Validation error
-        ERROR_COUNT.labels(
-            endpoint=endpoint, error_type="validation_error"
-        ).inc()
-        raise HTTPException(status_code=422, detail=str(e))
-    elif isinstance(e, OutOfMemoryError):
-        # GPU memory error
-        ERROR_COUNT.labels(endpoint=endpoint, error_type="gpu_error").inc()
-        raise HTTPException(status_code=503, detail="GPU memory exhausted")
-    else:
-        # Other processing errors
-        ERROR_COUNT.labels(
-            endpoint=endpoint, error_type="processing_error"
-        ).inc()
-        raise e
+    match e:
+        case UnicodeDecodeError():
+            ERROR_COUNT.labels(
+                endpoint=endpoint, error_type="decode_error"
+            ).inc()
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail="Invalid UTF-8 encoding in text",
+            )
+        case ValueError():
+            # Validation error
+            ERROR_COUNT.labels(
+                endpoint=endpoint, error_type="validation_error"
+            ).inc()
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=str(e)
+            )
+        case OutOfMemoryError():
+            # GPU memory error
+            ERROR_COUNT.labels(endpoint=endpoint, error_type="gpu_error").inc()
+            raise HTTPException(
+                status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+                detail="GPU memory exhausted",
+            )
+        case _:
+            # Other processing errors, log metrics and raise the exception
+            ERROR_COUNT.labels(
+                endpoint=endpoint, error_type="processing_error"
+            ).inc()
+            raise e

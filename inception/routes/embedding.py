@@ -1,4 +1,5 @@
 import time
+from http import HTTPStatus
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -104,7 +105,7 @@ async def create_batch_text_embeddings(request: BatchTextRequest):
             endpoint="batch", error_type="batch_too_large"
         ).inc()
         raise HTTPException(
-            status_code=422,
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=f"Batch size exceeds maximum of {settings.max_batch_size} documents",
         )
 

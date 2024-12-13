@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,7 +14,7 @@ class TestMonitoringEndpoints:
         """Verify health check endpoint returns correct status and information."""
         with TestClient(app) as client:
             response = client.get("/health")
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         data = response.json()
 
         assert "status" in data
@@ -23,7 +25,7 @@ class TestMonitoringEndpoints:
     def test_heartbeat(self, client):
         """Verify heartbeat endpoint is responding."""
         response = client.get("/")
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert response.text == '"Heartbeat detected."'
 
     @pytest.mark.monitoring
@@ -31,7 +33,7 @@ class TestMonitoringEndpoints:
         """Verify appropriate response when service is not initialized."""
         monkeypatch.setattr("inception.main.embedding_service", None)
         response = client.post("/api/v1/embed/query", json={"text": "test"})
-        assert response.status_code == 503
+        assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
         assert "service not initialized" in response.json()["detail"].lower()
 
     @pytest.mark.monitoring
@@ -39,7 +41,7 @@ class TestMonitoringEndpoints:
         """Verify appropriate response for the metrics endpoint."""
 
         response = client.get("/metrics")
-        assert response.status_code == 200
+        assert response.status_code == HTTPStatus.OK
         assert "inception_requests_total" in response.content.decode()
         assert "inception_processing_seconds" in response.content.decode()
         assert "inception_errors_total" in response.content.decode()

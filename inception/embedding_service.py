@@ -12,7 +12,12 @@ from inception.utils import logger, preprocess_text
 
 
 class EmbeddingService:
-    def __init__(self, model: SentenceTransformer, max_words: int):
+    def __init__(
+        self,
+        model: SentenceTransformer,
+        max_words: int,
+        processing_batch_size: int,
+    ):
         start_time = time.time()
         try:
             self.model = model
@@ -23,6 +28,7 @@ class EmbeddingService:
             )
             self.gpu_model = model.to(device)
             self.max_words = max_words
+            self.processing_batch_size = processing_batch_size
             if device == "cuda":
                 self.pool = self.gpu_model.start_multi_process_pool()
             MODEL_LOAD_TIME.observe(time.time() - start_time)
@@ -100,7 +106,9 @@ class EmbeddingService:
         # Generate embeddings
         embeddings = await asyncio.get_event_loop().run_in_executor(
             None,
-            lambda: self.gpu_model.encode(sentences=all_chunks, batch_size=8),
+            lambda: self.gpu_model.encode(
+                sentences=all_chunks, batch_size=self.processing_batch_size
+            ),
         )
 
         # Process results
