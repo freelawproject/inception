@@ -1,6 +1,8 @@
 import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 import nltk
 import sentry_sdk
@@ -33,7 +35,7 @@ embedding_service = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> None:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Handle application startup and shutdown.
 
     :param app: The FastAPI application instance.
@@ -122,8 +124,8 @@ def custom_openapi():
     return app.openapi_schema
 
 
-app.openapi = custom_openapi
-app.include_router(routes.api_router)
+app.openapi = custom_openapi  # type: ignore
+app.include_router(routes.api_router)  # type: ignore
 
 
 if __name__ == "__main__":

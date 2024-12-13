@@ -1,7 +1,8 @@
 version: "3.8"
 
 services:
-  embedding-service:
+  inception-embedding-service:
+    container_name: inception-embedding-service
     build:
       context: .
       args:

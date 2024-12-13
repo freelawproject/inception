@@ -52,7 +52,7 @@ def clean_text_for_json(text: str) -> str | None:
         raise ValueError(f"Error cleaning text: {str(e)}")
 
 
-def preprocess_text(text: str) -> str | None:
+def preprocess_text(text: str) -> str:
     """
     Preprocess text for embedding generation.
     Includes cleaning and validation steps.
@@ -65,23 +65,6 @@ def preprocess_text(text: str) -> str | None:
         return cleaned_text
     except Exception as e:
         raise ValueError(f"Error preprocessing text: {str(e)}")
-
-
-def check_embedding_service(embedding_service, endpoint: str) -> None:
-    """Check if the embedding service is initialized.
-
-    :param embedding_service: The embedding service instance.
-    :param endpoint: The name of the endpoint.
-    :return: None it raises HTTPException if service is not initialized.
-    """
-    if not embedding_service:
-        ERROR_COUNT.labels(
-            endpoint=endpoint, error_type="service_unavailable"
-        ).inc()
-        raise HTTPException(
-            status_code=503,
-            detail="Embedding service not initialized",
-        )
 
 
 def validate_text_length(
