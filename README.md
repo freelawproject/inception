@@ -20,28 +20,45 @@ The service is optimized to handle two main use cases:
 
 ## Installation
 
-This project uses Poetry for dependency management. To get started:
+This project uses UV for dependency management. To get started:
 
-1. Install Poetry:[.zshrc](../../../.zshrc)
+1. Install [UV](https://docs.astral.sh/uv/getting-started/installation/):
    ```bash
-   curl -sSL https://install.python-poetry.org | python3 -
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
 2. Clone the repository and install dependencies:
    ```bash
    git clone https://github.com/freelawproject/inception
    cd inception
-   poetry install
+   uv sync --extra cpu
    ```
+   Use `--extra gpu`  for CUDA GPU support.
 
 ## Quick Start
 
 ### Running the Service
 
-The easiest way to run the embedding service is using Docker:
+The easiest way to run the embedding service is using Docker.
 
+Build:
+```bash
+docker build -t inception:latest --build-arg TARGET_ENV=prod .
+```
+
+Run:
+```bash
+docker run -d -p 8005:8005 inception
+```
+
+Run from hosted image:
 ```bash
 docker run -d -p 8005:8005 freelawproject/inception:v2
+```
+
+For development run it with docker compose:
+```bash
+docker compose -f docker-compose.dev.yml up
 ```
 
 To handle more concurrent tasks, increase the number of workers:
@@ -166,13 +183,7 @@ Please ensure you:
 - Test thoroughly using provided tools:
   ```bash
   # Run tests
-  docker-compose -f docker-compose.dev.yml up test
-
-  # Test endpoints
-  ./test_service.sh
-
-  # Test Python client
-  python examples/client_example.py
+  docker exec -it inception-embedding-service pytest tests -v
   ```
 
 ## Monitoring

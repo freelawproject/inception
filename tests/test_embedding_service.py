@@ -63,6 +63,7 @@ class TestEmbeddingGeneration:
                 "/api/v1/embed/query",
                 json={"text": "What constitutes copyright infringement?"},
             )
+
         assert response.status_code == HTTPStatus.OK
         data = response.json()
         assert "embedding" in data

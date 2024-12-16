@@ -11,18 +11,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10"]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
 
       - name: Create the .env settings file
         working-directory: inception/
@@ -32,4 +24,4 @@ jobs:
         run: docker-compose -f docker-compose.dev.yml up --build -d
 
       - name: Run tests
-        run: docker exec inception-embedding-service poetry run pytest tests -v
+        run: docker exec inception-embedding-service pytest tests -v

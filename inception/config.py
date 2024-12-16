@@ -1,5 +1,5 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -21,9 +21,7 @@ class Settings(BaseSettings):
     force_cpu: bool = False
     enable_metrics: bool = True
 
-    model_config = {
-        "env_file": ".env",
-    }
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()  # type: ignore[call-arg]

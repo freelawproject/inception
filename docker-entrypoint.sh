@@ -3,7 +3,7 @@ set -e
 
 if [ "$TARGET_ENV" = "prod" ]; then
     # Production command
-    exec poetry run gunicorn \
+    exec gunicorn \
         --workers=${EMBEDDING_WORKERS:-4} \
         --worker-class=uvicorn.workers.UvicornWorker \
         --bind=0.0.0.0:8005 \
@@ -13,7 +13,7 @@ if [ "$TARGET_ENV" = "prod" ]; then
         inception.main:app
 else
     # Development command
-    exec poetry run uvicorn inception.main:app \
+    exec uvicorn inception.main:app \
         --host 0.0.0.0 \
         --port 8005 \
         --log-level debug \
