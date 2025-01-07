@@ -1,5 +1,5 @@
 # Use NVIDIA CUDA base image
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:12.6.3-runtime-ubuntu24.04 as base
 
 # Set UV environment variables
 # https://hynek.me/articles/docker-uv/
@@ -33,7 +33,11 @@ COPY pyproject.toml uv.lock README.md docker-entrypoint.sh ./
 # Copy source code
 COPY inception/ inception/
 
+# UV_PROJECT_ENVIRONMENT is required to specify the path for the venv to use for project operations.
+# Otherwise .venv is created within the project path.
+# https://docs.astral.sh/uv/concepts/projects/config/#project-environment-path
 ENV UV_PROJECT_ENVIRONMENT=/home/venv
+# Set the active virtual environment to the same path as UV_PROJECT_ENVIRONMENT
 ENV VIRTUAL_ENV=$UV_PROJECT_ENVIRONMENT
 
 RUN uv python install 3.12
