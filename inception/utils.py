@@ -78,7 +78,7 @@ def validate_text_length(
         ).inc()
         error_msg = f"Text length ({text_length}) below minimum ({settings.min_text_length})"
         if doc_id is not None:
-            error_msg = f"Document {doc_id}: Text length ({text_length}) below minimum ({settings.min_text_length})."
+            error_msg = f"Document {doc_id}: {error_msg}"
         raise ValueError(error_msg)
 
     max_length = (

@@ -43,14 +43,8 @@ package = true
 
 [tool.uv.sources]
 torch = [
-  { index = "torch-cpu", extra = "cpu", marker = "platform_machine!='aarch64'"},
   { index = "torch-gpu", extra = "gpu" },
 ]
-
-[[tool.uv.index]]
-name = "torch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
 
 [[tool.uv.index]]
 name = "torch-gpu"

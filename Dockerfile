@@ -33,10 +33,12 @@ COPY pyproject.toml uv.lock README.md docker-entrypoint.sh ./
 # Copy source code
 COPY inception/ inception/
 
+ENV UV_PROJECT_ENVIRONMENT=/home/venv
+ENV VIRTUAL_ENV=$UV_PROJECT_ENVIRONMENT
+
 RUN uv python install 3.12
 
-RUN uv venv
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Use an ARG to control build environment
 ARG TARGET_ENV=dev

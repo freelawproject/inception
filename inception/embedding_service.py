@@ -1,5 +1,6 @@
 import asyncio
 import time
+from itertools import islice
 
 import torch
 from nltk.tokenize import sent_tokenize
@@ -111,22 +112,25 @@ class EmbeddingService:
             ),
         )
 
-        # Process results
-        start_index = 0
-        for count in chunk_counts:
-            text_embeddings = []
-            for j in range(count):
-                chunk = all_chunks[start_index + j]
-                embedding = embeddings[start_index + j]
-                text_embeddings.append(
+        # Create pairs of embeddings and corresponding chunks
+        embedding_chunk_pairs = zip(embeddings, all_chunks)
+        # Split the pairs into groups based on the number of chunks per text
+        sliced_results = [
+            list(islice(embedding_chunk_pairs, 0, i)) for i in chunk_counts
+        ]
+        logger.info(f"sliced_results {sliced_results}")
+        for text_embedding in sliced_results:
+            text_embeddings_list = []
+            for idx, embedding_chunk_pair in enumerate(text_embedding):
+                embedding, chunk = embedding_chunk_pair
+                text_embeddings_list.append(
                     ChunkEmbedding(
-                        chunk_number=j + 1,
+                        chunk_number=idx + 1,
                         chunk=chunk,
                         embedding=embedding.tolist(),
                     )
                 )
-            all_embeddings.append(text_embeddings)
-            start_index += count
+            all_embeddings.append(text_embeddings_list)
 
         return all_embeddings
 
