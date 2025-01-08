@@ -1,0 +1,36 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+    python: "python3.12"
+ci:
+    autoupdate_schedule: quarterly
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v5.0.0
+      hooks:
+          - id: check-added-large-files
+          - id: check-ast
+          - id: check-json
+          - id: check-merge-conflict
+          - id: check-toml
+          - id: check-yaml
+          - id: debug-statements
+          - id: detect-private-key
+          - id: trailing-whitespace
+
+    - repo: https://github.com/psf/black
+      rev: 24.10.0
+      hooks:
+          - id: black
+
+    - repo: https://github.com/PyCQA/isort
+      rev: 5.13.2
+      hooks:
+          - id: isort
+            name: isort (python)
+
+    - repo: https://github.com/ikamensh/flynt/
+      rev: 1.0.1
+      hooks:
+        - id: flynt
+          args: [ --line-length=79, --transform-concats ]

@@ -1,0 +1,42 @@
+name: Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v4
+
+      - name: Define a cache dependency glob
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install the project
+        run: uv sync --extra cpu --frozen;
+
+      - name: Debug paths
+        run: |
+          pwd
+          ls -al
+
+      - name: Flynt f-string Formatter
+        run: >
+          flynt .
+          --line-length=79
+          --transform-concats
+          --fail-on-change
+
+      - name: mypy Static Type Checker
+        run: mypy inception
+
+      - name: Black Code Formatter
+        uses: psf/black@stable
