@@ -18,6 +18,126 @@ The service is optimized to handle two main use cases:
 - Comprehensive text preprocessing and cleaning tailored for legal text
 - Health check endpoint
 
+
+## Configuration
+
+The service can be configured through environment variables or a `.env` file. Copy `.env.example` to `.env` to get started:
+```bash
+cp .env.example .env
+```
+
+### Environment Variables
+
+Model Settings:
+- `TRANSFORMER_MODEL_NAME`
+
+    Default: `sentence-transformers/multi-qa-mpnet-base-dot-v1`
+
+    The name or path of the SentenceTransformer model to use for generating embeddings.
+
+- `MAX_WORDS`
+
+    Default: `350` (Range: 1–1000)
+
+    Maximum number of words per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
+
+- `MIN_TEXT_LENGTH`
+
+    Default: `1`
+
+    The minimum length (in characters) of text required before attempting to process.
+
+- `MAX_QUERY_LENGTH`
+
+    Default: `100`
+
+    The maximum allowable length (in characters) for a query text.
+
+- `MAX_TEXT_LENGTH`
+
+    Default: `10000000` (characters)
+
+    The maximum allowable length (in characters) for any single text input.
+
+- `MAX_BATCH_SIZE`
+
+    Default: `100`
+
+    The maximum number of items you can process in a single batch.
+
+- `PROCESSING_BATCH_SIZE`
+
+    Default: `8`
+
+    The batch size used internally by the model encoder. This helps to control memory usage and speed when processing multiple chunks or texts.
+
+- `POOL_TIMEOUT`
+
+    Default: `3600` (seconds)
+
+    Timeout for multi-process pool operations. Determines how long worker processes will wait before timing out.
+
+Server Settings:
+- `HOST`
+
+    Default: `0.0.0.0`
+
+    The host interface on which the server listens.
+
+- `PORT`
+
+    Default: `8005`
+
+    The port on which the server listens for incoming requests.
+
+- `EMBEDDING_WORKERS`
+
+    Default: `4`
+
+    Number of Gunicorn worker processes for serving the embedding service. Increase if you need higher concurrency.
+
+GPU Settings:
+- `FORCE_CPU`
+
+    Default: `false`
+
+    Forces the service to run on CPU even if a GPU is available. Useful for debugging or ensuring CPU is selected on query embedding service instances.
+
+Monitoring:
+- `ENABLE_METRICS`
+
+    Default: `true`
+
+    Enables Prometheus metrics collection for performance and usage monitoring.
+
+- `SENTRY_DSN`
+
+    Optional
+
+    Sentry DSN for error tracking.
+
+CORS Settings:
+- `ALLOWED_ORIGINS`
+
+    A comma-separated list of allowed origins for cross-origin requests.
+
+    Example: `ALLOWED_ORIGINS=https://example.com,https://example2.com`
+
+- `ALLOWED_METHODS`
+
+    A comma-separated list of allowed HTTP methods for cross-origin requests.
+
+    Example: `ALLOWED_METHODS=GET,POST,OPTIONS`
+
+- `ALLOWED_HEADERS`
+
+    A comma-separated list of allowed HTTP headers for cross-origin requests.
+
+    Example: `ALLOWED_HEADERS=Authorization,Content-Type`
+
+See `.env.example` for a complete list of configuration options.
+
+
 ## Installation
 
 This project uses UV for dependency management. To get started:
@@ -154,125 +274,6 @@ response = requests.post(
 )
 batch_embeddings = response.json()["embeddings"]
 ```
-
-
-## Configuration
-
-The service can be configured through environment variables or a `.env` file. Copy `.env.example` to `.env` to get started:
-```bash
-cp .env.example .env
-```
-
-### Environment Variables
-
-Model Settings:
-- `TRANSFORMER_MODEL_NAME`
-
-    Default: `sentence-transformers/multi-qa-mpnet-base-dot-v1`
-
-    The name or path of the SentenceTransformer model to use for generating embeddings.
-
-- `MAX_WORDS`
-
-    Default: `350` (Range: 1–1000)
-
-    Maximum number of words per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
-
-- `MIN_TEXT_LENGTH`
-
-    Default: `1`
-
-    The minimum length (in characters) of text required before attempting to process.
-
-- `MAX_QUERY_LENGTH`
-
-    Default: `100`
-
-    The maximum allowable length (in characters) for a query text.
-
-- `MAX_TEXT_LENGTH`
-
-    Default: `10000000` (characters)
-
-    The maximum allowable length (in characters) for any single text input.
-
-- `MAX_BATCH_SIZE`
-
-    Default: `100`
-
-    The maximum number of items you can process in a single batch.
-
-- `PROCESSING_BATCH_SIZE`
-
-    Default: `8`
-
-    The batch size used internally by the model encoder. This helps to control memory usage and speed when processing multiple chunks or texts.
-
-- `POOL_TIMEOUT`
-
-    Default: `3600` (seconds)
-
-    Timeout for multi-process pool operations. Determines how long worker processes will wait before timing out.
-
-Server Settings:
-- `HOST`
-
-    Default: `0.0.0.0`
-
-    The host interface on which the server listens.
-
-- `PORT`
-
-    Default: `8005`
-
-    The port on which the server listens for incoming requests.
-
-- `EMBEDDING_WORKERS`
-
-    Default: `4`
-
-    Number of Gunicorn worker processes for serving the embedding service. Increase if you need higher concurrency.
-
-GPU Settings:
-- `FORCE_CPU`
-
-    Default: `false`
-
-    Forces the service to run on CPU even if a GPU is available. Useful for debugging or ensuring CPU is selected on query embedding service instances.
-
-Monitoring:
-- `ENABLE_METRICS`
-
-    Default: `true`
-
-    Enables Prometheus metrics collection for performance and usage monitoring.
-
-- `SENTRY_DSN`
-
-    Optional
-
-    Sentry DSN for error tracking.
-
-CORS Settings:
-- `ALLOWED_ORIGINS`
-
-    A comma-separated list of allowed origins for cross-origin requests.
-
-    Example: `ALLOWED_ORIGINS=https://example.com,https://example2.com`
-
-- `ALLOWED_METHODS`
-
-    A comma-separated list of allowed HTTP methods for cross-origin requests.
-
-    Example: `ALLOWED_METHODS=GET,POST,OPTIONS`
-
-- `ALLOWED_HEADERS`
-
-    A comma-separated list of allowed HTTP headers for cross-origin requests.
-
-    Example: `ALLOWED_HEADERS=Authorization,Content-Type`
-
-See `.env.example` for a complete list of configuration options.
 
 ## Contributing
 
