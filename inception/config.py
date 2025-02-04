@@ -7,8 +7,8 @@ class Settings(BaseSettings):
         "sentence-transformers/multi-qa-mpnet-base-dot-v1",
         description="Name of the transformer model to use",
     )
-    max_words: int = Field(
-        350, ge=1, le=1000, description="Maximum words per chunk"
+    max_tokens: int = Field(
+        512, ge=1, le=10000, description="Maximum tokens per chunk"
     )
     min_text_length: int = 1
     max_query_length: int = 100

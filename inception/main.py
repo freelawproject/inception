@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             model = SentenceTransformer(settings.transformer_model_name)
             embedding_service = EmbeddingService(
                 model=model,
-                max_words=settings.max_words,
+                max_tokens=settings.max_tokens,
                 processing_batch_size=settings.processing_batch_size,
             )
             logger.info("Embedding service initialized successfully")

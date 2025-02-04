@@ -16,7 +16,7 @@ class EmbeddingService:
     def __init__(
         self,
         model: SentenceTransformer,
-        max_words: int,
+        max_tokens: int,
         processing_batch_size: int,
     ):
         start_time = time.time()
@@ -28,7 +28,7 @@ class EmbeddingService:
                 else ("cuda" if torch.cuda.is_available() else "cpu")
             )
             self.gpu_model = model.to(device)
-            self.max_words = max_words
+            self.max_tokens = max_tokens
             self.processing_batch_size = processing_batch_size
             if device == "cuda":
                 self.pool = self.gpu_model.start_multi_process_pool()
@@ -47,7 +47,7 @@ class EmbeddingService:
             logger.error(f"Error stopping model pool: {str(e)}")
 
     def split_text_into_chunks(self, text: str) -> list[str]:
-        """Split text into chunks based on sentences, not exceeding max_words"""
+        """Split text into chunks based on sentences, not exceeding max_tokens"""
         sentences = sent_tokenize(text)
         chunks = []
         current_chunk = []
@@ -57,7 +57,7 @@ class EmbeddingService:
             sentence_words = sentence.split()
             sentence_word_count = len(sentence_words)
 
-            if current_word_count + sentence_word_count <= self.max_words:
+            if current_word_count + sentence_word_count <= self.max_tokens:
                 current_chunk.append(sentence)
                 current_word_count += sentence_word_count
             else:

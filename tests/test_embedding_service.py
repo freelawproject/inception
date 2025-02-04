@@ -24,7 +24,7 @@ def test_service() -> EmbeddingService:
     model = SentenceTransformer(settings.transformer_model_name)
     return EmbeddingService(
         model=model,
-        max_words=settings.max_words,
+        max_tokens=settings.max_tokens,
         processing_batch_size=settings.processing_batch_size,
     )
 
@@ -250,8 +250,8 @@ class TestTextProcessing:
             isinstance(chunk, str) for chunk in chunks
         ), "Non-string chunk found"
         assert all(
-            len(chunk.split()) <= test_service.max_words for chunk in chunks
-        ), "Chunk exceeds maximum word limit"
+            len(chunk.split()) <= test_service.max_tokens for chunk in chunks
+        ), "Chunk exceeds maximum token limit"
 
         # Sentence boundary verification
         for i, chunk in enumerate(chunks):

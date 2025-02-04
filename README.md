@@ -35,11 +35,11 @@ Model Settings:
 
     The name or path of the SentenceTransformer model to use for generating embeddings.
 
-- `MAX_WORDS`
+- `MAX_TOKENS`
 
-    Default: `350` (Range: 1–1000)
+    Default: `512` (Range: 1–10000)
 
-    Maximum number of words per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
+    Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
 
 - `MIN_TEXT_LENGTH`
 
