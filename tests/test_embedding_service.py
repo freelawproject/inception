@@ -269,7 +269,7 @@ class TestTextProcessing:
             ), f"Chunk {i} contains incomplete sentences"
 
         # Content preservation
-        original_content = "".join(sample_text.split())
+        original_content = "".join(["search_document:"] + sample_text.split())
         chunked_content = "".join("".join(chunks).split())
         assert (
             original_content == chunked_content
