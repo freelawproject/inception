@@ -41,6 +41,12 @@ Model Settings:
 
     Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
 
+- `SENTENCE_OVERLAP`
+
+    Default: `10` (Range: 1–100)
+
+    Number of sentences to overlap between chunks when splitting text.
+
 - `MIN_TEXT_LENGTH`
 
     Default: `1`

@@ -28,6 +28,7 @@ def test_service() -> EmbeddingService:
         model=model,
         tokenizer=tokenizer,
         max_tokens=settings.max_tokens,
+        sentence_overlap=settings.sentence_overlap,
         processing_batch_size=settings.processing_batch_size,
     )
 

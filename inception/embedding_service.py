@@ -19,6 +19,7 @@ class EmbeddingService:
         model: SentenceTransformer,
         tokenizer: AutoTokenizer,
         max_tokens: int,
+        sentence_overlap: int,
         processing_batch_size: int,
     ):
         start_time = time.time()
@@ -32,6 +33,7 @@ class EmbeddingService:
             )
             self.gpu_model = model.to(device)
             self.max_tokens = max_tokens
+            self.sentence_overlap = sentence_overlap
             self.processing_batch_size = processing_batch_size
             if device == "cuda":
                 self.pool = self.gpu_model.start_multi_process_pool()
@@ -50,31 +52,38 @@ class EmbeddingService:
             logger.error(f"Error stopping model pool: {str(e)}")
 
     def split_text_into_chunks(self, text: str) -> list[str]:
-        """Split text into chunks based on sentences, not exceeding max_tokens"""
+        """Split text into chunks based on sentences, not exceeding max_tokens, with sentence overlap"""
         # Set-up input format for the model
         lead_text = "search_document:"
         lead_tokens = len(self.tokenizer(lead_text)["input_ids"])
         
-        sentences = sent_tokenize(text)  # Split the text into sentences
+        sentences = sent_tokenize(text)  # Tokenize into sentences
         chunks = []
-        current_chunk = []
-        current_tokens = lead_tokens
+        start_idx = 0  # Start index of the current chunk
         
-        for sentence in sentences:
-            token_count = len(self.tokenizer(sentence, add_special_tokens=False)["input_ids"])  # Tokenize without special tokens
+        while start_idx < len(sentences):
+            current_chunk = []
+            current_token_count = lead_tokens
+            idx = start_idx
             
-            if current_tokens + token_count >= self.max_tokens:
-                # Store the current chunk and start a new one
+            # Build a chunk until max_tokens is reached
+            while idx < len(sentences):
+                token_count = len(self.tokenizer(sentences[idx], add_special_tokens=False)["input_ids"])
+                if current_token_count + token_count >= self.max_tokens:
+                    break
+                current_chunk.append(sentences[idx])
+                current_token_count += token_count
+                idx += 1  # Move to next sentence
+            
+            if current_chunk:
                 chunks.append(" ".join([lead_text] + current_chunk))
-                current_chunk = [sentence]
-                current_tokens = lead_tokens + token_count
-            else:
-                current_chunk.append(sentence)
-                current_tokens += token_count
-        
-        # Add the last chunk if it has content
-        if current_chunk:
-            chunks.append(" ".join([lead_text] + current_chunk))
+            
+            # Stop if the last chunk reaches the end of the text
+            if idx >= len(sentences):
+                break
+            
+            # Move start index forward but keep overlap
+            start_idx = max(idx - self.sentence_overlap, start_idx + 1)
         
         return chunks
 
