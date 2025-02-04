@@ -9,6 +9,7 @@ from http import HTTPStatus
 import pytest
 from fastapi.testclient import TestClient
 from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
 
 from inception.config import settings
 from inception.embedding_service import EmbeddingService
@@ -22,8 +23,10 @@ pytestmark = [pytest.mark.embedding]
 def test_service() -> EmbeddingService:
     """Create an instance of EmbeddingService for testing."""
     model = SentenceTransformer(settings.transformer_model_name)
+    tokenizer = AutoTokenizer.from_pretrained(settings.transformer_model_name)
     return EmbeddingService(
         model=model,
+        tokenizer=tokenizer,
         max_tokens=settings.max_tokens,
         processing_batch_size=settings.processing_batch_size,
     )

@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 from inception import routes
@@ -51,8 +52,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 f"Attempting to initialize embedding service (attempt {attempt + 1}/{max_retries})"
             )
             model = SentenceTransformer(settings.transformer_model_name)
+            tokenizer = AutoTokenizer.from_pretrained(settings.transformer_model_name)
             embedding_service = EmbeddingService(
                 model=model,
+                tokenizer=tokenizer,
                 max_tokens=settings.max_tokens,
                 processing_batch_size=settings.processing_batch_size,
             )

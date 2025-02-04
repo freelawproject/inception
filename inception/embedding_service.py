@@ -5,6 +5,7 @@ from itertools import islice
 import torch
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
 
 from inception.config import settings
 from inception.metrics import CHUNK_COUNT, MODEL_LOAD_TIME
@@ -16,12 +17,14 @@ class EmbeddingService:
     def __init__(
         self,
         model: SentenceTransformer,
+        tokenizer: AutoTokenizer,
         max_tokens: int,
         processing_batch_size: int,
     ):
         start_time = time.time()
         try:
             self.model = model
+            self.tokenizer = tokenizer
             device = (
                 "cpu"
                 if settings.force_cpu
@@ -48,27 +51,31 @@ class EmbeddingService:
 
     def split_text_into_chunks(self, text: str) -> list[str]:
         """Split text into chunks based on sentences, not exceeding max_tokens"""
-        sentences = sent_tokenize(text)
+        # Set-up input format for the model
+        lead_text = "search_document:"
+        lead_tokens = len(self.tokenizer(lead_text)["input_ids"])
+        
+        sentences = sent_tokenize(text)  # Split the text into sentences
         chunks = []
         current_chunk = []
-        current_word_count = 0
-
+        current_tokens = lead_tokens
+        
         for sentence in sentences:
-            sentence_words = sentence.split()
-            sentence_word_count = len(sentence_words)
-
-            if current_word_count + sentence_word_count <= self.max_tokens:
-                current_chunk.append(sentence)
-                current_word_count += sentence_word_count
-            else:
-                if current_chunk:
-                    chunks.append(" ".join(current_chunk))
+            token_count = len(self.tokenizer(sentence, add_special_tokens=False)["input_ids"])  # Tokenize without special tokens
+            
+            if current_tokens + token_count >= self.max_tokens:
+                # Store the current chunk and start a new one
+                chunks.append(" ".join([lead_text] + current_chunk))
                 current_chunk = [sentence]
-                current_word_count = sentence_word_count
-
+                current_tokens = lead_tokens + token_count
+            else:
+                current_chunk.append(sentence)
+                current_tokens += token_count
+        
+        # Add the last chunk if it has content
         if current_chunk:
-            chunks.append(" ".join(current_chunk))
-
+            chunks.append(" ".join([lead_text] + current_chunk))
+        
         return chunks
 
     async def generate_query_embedding(self, text: str) -> list[float]:
@@ -81,7 +88,7 @@ class EmbeddingService:
         embedding = await asyncio.get_event_loop().run_in_executor(
             None,
             lambda: self.gpu_model.encode(
-                sentences=[processed_text], batch_size=1
+                sentences=['search_query: ' + processed_text], batch_size=1
             ),
         )
         return embedding[0].tolist()

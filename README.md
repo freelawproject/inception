@@ -272,7 +272,8 @@ response = requests.post(
         },
     timeout=20,
 )
-batch_embeddings = response.json()["embeddings"]
+document_1_embeddings = response.json()[0]["embeddings"]
+document_2_embeddings = response.json()[1]["embeddings"]
 ```
 
 ## Contributing
