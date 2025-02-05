@@ -4,14 +4,14 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     transformer_model_name: str = Field(
-        "sentence-transformers/multi-qa-mpnet-base-dot-v1",
+        "nomic-ai/modernbert-embed-base",
         description="Name of the transformer model to use",
     )
     max_tokens: int = Field(
-        512, ge=1, le=10000, description="Maximum tokens per chunk"
+        8192, ge=1, le=10000, description="Maximum tokens per chunk"
     )
     sentence_overlap: int = Field(
-        3, ge=1, le=100, description="Number of sentence overlap between chunks"
+        10, ge=1, le=100, description="Number of sentence overlap between chunks"
     )
     min_text_length: int = 1
     max_query_length: int = 100

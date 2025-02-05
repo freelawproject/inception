@@ -10,7 +10,7 @@ The service is optimized to handle two main use cases:
 
 ## Features
 
-- Specialized text embedding generation for legal documents using the `sentence-transformers/multi-qa-mpnet-base-dot-v1`
+- Specialized text embedding generation for legal documents using the `nomic-ai/modernbert-embed-base`
 - Intelligent text chunking optimized for court opinions, based on sentence boundaries
 - Dedicated CPU-based processing for search queries, ensuring fast response times
 - GPU acceleration support for processing lengthy court opinions
@@ -31,19 +31,19 @@ cp .env.example .env
 Model Settings:
 - `TRANSFORMER_MODEL_NAME`
 
-    Default: `sentence-transformers/multi-qa-mpnet-base-dot-v1`
+    Default: `nomic-ai/modernbert-embed-base`
 
     The name or path of the SentenceTransformer model to use for generating embeddings.
 
 - `MAX_TOKENS`
 
-    Default: `512` (Range: 1–10000)
+    Default: `8192` (Range: 1–10000)
 
     Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
 
 - `SENTENCE_OVERLAP`
 
-    Default: `3` (Range: 1–100)
+    Default: `10` (Range: 1–100)
 
     Number of sentences to overlap between chunks when splitting text.
 
