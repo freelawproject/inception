@@ -51,7 +51,7 @@ Model Settings:
 
     Default: `10` (Range: 1–100)
 
-    Number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. 
+    Number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. Length of `SENTENCE_OVERLAP` should be adjusted according to the size of `MAX_TOKENS`, smaller `MAX_TOKENS` should use a smaller `SENTENCE_OVERLAP`.
 
 - `MIN_TEXT_LENGTH`
 
@@ -202,6 +202,22 @@ Check that the service is running:
 ```bash
 curl http://localhost:8005
 # Should return: "Heartbeat detected."
+```
+
+### Running the Service Outside of Docker
+
+1. Activate the venv
+```bash
+source .venv/bin/activate
+```
+
+2. Start the microservice
+```bash
+uvicorn inception.main:app \
+        --host 0.0.0.0 \
+        --port 8005 \
+        --log-level debug \
+        --reload
 ```
 
 ## Running tests
