@@ -51,8 +51,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             logger.info(
                 f"Attempting to initialize embedding service (attempt {attempt + 1}/{max_retries})"
             )
-            model = SentenceTransformer(settings.transformer_model_name)
-            tokenizer = AutoTokenizer.from_pretrained(settings.transformer_model_name)
+            model = SentenceTransformer(
+                settings.transformer_model_name,
+                revision=settings.transformer_model_version,
+            )
+            tokenizer = AutoTokenizer.from_pretrained(
+                settings.transformer_model_name
+            )
             embedding_service = EmbeddingService(
                 model=model,
                 tokenizer=tokenizer,

@@ -7,6 +7,10 @@ class Settings(BaseSettings):
         "nomic-ai/modernbert-embed-base",
         description="Name of the transformer model to use",
     )
+    transformer_model_version: str = Field(
+        "main",
+        description="Version of the transformer model to use",
+    )
     max_tokens: int = Field(
         8192, ge=1, le=10000, description="Maximum tokens per chunk"
     )

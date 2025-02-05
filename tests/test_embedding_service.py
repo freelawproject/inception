@@ -22,7 +22,10 @@ pytestmark = [pytest.mark.embedding]
 @pytest.fixture
 def test_service() -> EmbeddingService:
     """Create an instance of EmbeddingService for testing."""
-    model = SentenceTransformer(settings.transformer_model_name)
+    model = SentenceTransformer(
+        settings.transformer_model_name,
+        revision=settings.transformer_model_version,
+    )
     tokenizer = AutoTokenizer.from_pretrained(settings.transformer_model_name)
     return EmbeddingService(
         model=model,

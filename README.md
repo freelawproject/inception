@@ -35,6 +35,12 @@ Model Settings:
 
     The name or path of the SentenceTransformer model to use for generating embeddings.
 
+- `TRANSFORMER_MODEL_VERSION`
+
+    Default: `main`
+
+    The version of the SentenceTransformer model to use for generating embeddings. Use `main` for the latest version.
+
 - `MAX_TOKENS`
 
     Default: `8192` (Range: 1–10000)
