@@ -56,35 +56,39 @@ class EmbeddingService:
         # Set-up input format for the model
         lead_text = "search_document:"
         lead_tokens = len(self.tokenizer(lead_text)["input_ids"])
-        
+
         sentences = sent_tokenize(text)  # Tokenize into sentences
         chunks = []
         start_idx = 0  # Start index of the current chunk
-        
+
         while start_idx < len(sentences):
             current_chunk = []
             current_token_count = lead_tokens
             idx = start_idx
-            
+
             # Build a chunk until max_tokens is reached
             while idx < len(sentences):
-                token_count = len(self.tokenizer(sentences[idx], add_special_tokens=False)["input_ids"])
+                token_count = len(
+                    self.tokenizer(sentences[idx], add_special_tokens=False)[
+                        "input_ids"
+                    ]
+                )
                 if current_token_count + token_count >= self.max_tokens:
                     break
                 current_chunk.append(sentences[idx])
                 current_token_count += token_count
                 idx += 1  # Move to next sentence
-            
+
             if current_chunk:
                 chunks.append(" ".join([lead_text] + current_chunk))
-            
+
             # Stop if the last chunk reaches the end of the text
             if idx >= len(sentences):
                 break
-            
+
             # Move start index forward but keep overlap
             start_idx = max(idx - self.sentence_overlap, start_idx + 1)
-        
+
         return chunks
 
     async def generate_query_embedding(self, text: str) -> list[float]:
@@ -97,7 +101,7 @@ class EmbeddingService:
         embedding = await asyncio.get_event_loop().run_in_executor(
             None,
             lambda: self.gpu_model.encode(
-                sentences=['search_query: ' + processed_text], batch_size=1
+                sentences=["search_query: " + processed_text], batch_size=1
             ),
         )
         return embedding[0].tolist()
