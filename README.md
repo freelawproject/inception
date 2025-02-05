@@ -43,7 +43,7 @@ Model Settings:
 
 - `SENTENCE_OVERLAP`
 
-    Default: `10` (Range: 1–100)
+    Default: `3` (Range: 1–100)
 
     Number of sentences to overlap between chunks when splitting text.
 

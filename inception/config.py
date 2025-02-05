@@ -11,7 +11,7 @@ class Settings(BaseSettings):
         512, ge=1, le=10000, description="Maximum tokens per chunk"
     )
     sentence_overlap: int = Field(
-        10, ge=1, le=100, description="Number of sentence overlap between chunks"
+        3, ge=1, le=100, description="Number of sentence overlap between chunks"
     )
     min_text_length: int = 1
     max_query_length: int = 100
