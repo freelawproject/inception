@@ -45,7 +45,7 @@ Model Settings:
 
     Default: `10` (Range: 1–100)
 
-    Number of sentences to overlap between chunks when splitting text.
+    Number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. 
 
 - `MIN_TEXT_LENGTH`
 
