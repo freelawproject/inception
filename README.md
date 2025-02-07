@@ -322,6 +322,41 @@ docker exec -it inception-embedding-service pre-commit run --all-files
 docker exec -it inception-embedding-service mypy inception
 ```
 
+### Updating Dependencies
+
+1. The best way is to update the dependencies in Docker
+
+Step 1: Build the docker image
+```bash
+docker compose -f docker-compose.dev.yml build --no-cache
+```
+
+Step 2: Spin-up the docker image
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+Step 3: Add the new dependencies
+```bash
+docker exec -it inception-embedding-service uv add "transformers>=4.48.0,<5.0.0"
+```
+
+Step 4: Sync the new dependencies
+```bash
+docker exec -it inception-embedding-service uv lock
+```
+Should see the new dependencies in `uv.lock` and `pyproject.toml`
+
+
+2. Alternatively, use uv to update dependencies outside of Docker
+```bash
+uv add "transformers>=4.48.0,<5.0.0"
+```
+
+```bash
+uv lock
+```
+
 ## Monitoring
 
 The service includes several monitoring endpoints:
