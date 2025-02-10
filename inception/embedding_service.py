@@ -66,7 +66,7 @@ class EmbeddingService:
         lead_text = "search_document: "
         lead_tokens = self.tokenizer.encode(lead_text)
         chunks = []
-        current_chunks = []
+        current_chunks:list[str] = []
         current_token_counts = len(lead_tokens)
 
         for sentence_index, sentence_tokens in sentence_dict.items():
