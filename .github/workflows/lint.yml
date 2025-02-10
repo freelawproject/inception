@@ -20,6 +20,12 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
+      - name: Initialize the virtual environment
+        run: uv venv
+
+      - name: Add virtual environment to PATH
+        run: echo "${{ github.workspace }}/.venv/bin" >> $GITHUB_PATH
+
       - name: Install the project
         run: uv sync --extra cpu --frozen;
 
@@ -40,3 +46,6 @@ jobs:
 
       - name: Black Code Formatter
         uses: psf/black@stable
+
+      - name: Isort
+        run: isort --diff .

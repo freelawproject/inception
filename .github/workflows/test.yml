@@ -18,10 +18,10 @@ jobs:
 
       - name: Create the .env settings file
         working-directory: inception/
-        run: cp .env.example .env
+        run: cp ../.env.example ../.env
 
       - name: Build image & start
-        run: docker-compose -f docker-compose.dev.yml up --build -d
+        run: docker compose -f docker-compose.dev.yml up --build -d
 
       - name: Run tests
         run: docker exec inception-embedding-service pytest tests -v
