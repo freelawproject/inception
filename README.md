@@ -43,15 +43,15 @@ Model Settings:
 
 - `MAX_TOKENS`
 
-    Default: `8192` (Range: 1–10000)
+    Default: `8192` (Range: 512–10000)
 
-    Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
+    Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks based on sentence boundaries. If a sentence exceeds this limit, it is truncated. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries.
 
-- `SENTENCE_OVERLAP`
+- `OVERLAP_RATIO`
 
-    Default: `10` (Range: 1–100)
+    Default: `0.002` (Range: 0-0.01)
 
-    Number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. Length of `SENTENCE_OVERLAP` should be adjusted according to the size of `MAX_TOKENS`, smaller `MAX_TOKENS` should use a smaller `SENTENCE_OVERLAP`.
+    The ratio to calculate the number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. `num_overlap_sentences = int(MAX_TOKENS * OVERLAP_RATIO)`.
 
 - `MIN_TEXT_LENGTH`
 

@@ -9,8 +9,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from transformers import AutoTokenizer
 
 from inception import routes
 from inception.config import settings
@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 model=model,
                 tokenizer=tokenizer,
                 max_tokens=settings.max_tokens,
-                sentence_overlap=settings.sentence_overlap,
+                overlap_ratio=settings.overlap_ratio,
                 processing_batch_size=settings.processing_batch_size,
             )
             logger.info("Embedding service initialized successfully")

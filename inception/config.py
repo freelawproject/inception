@@ -12,13 +12,13 @@ class Settings(BaseSettings):
         description="Version of the transformer model to use",
     )
     max_tokens: int = Field(
-        8192, ge=1, le=10000, description="Maximum tokens per chunk"
+        8192, ge=512, le=10000, description="Maximum tokens per chunk"
     )
-    sentence_overlap: int = Field(
-        10,
-        ge=1,
-        le=100,
-        description="Number of sentence overlap between chunks",
+    overlap_ratio: float = Field(
+        0.002,
+        ge=0,
+        le=0.01,
+        description="Ratio to calculate number of sentence overlap between chunks",
     )
     min_text_length: int = 1
     max_query_length: int = 100
