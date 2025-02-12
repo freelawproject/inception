@@ -80,7 +80,7 @@ async def create_text_embedding(request: Request):
         # Clean up GPU memory after processing large texts
         text_length = len(text.strip())
         if (
-            text_length > settings.max_words * 10
+            text_length > settings.max_tokens * 10
         ):  # Arbitrary threshold for "large" texts
             embedding_service.cleanup_gpu_memory()
 

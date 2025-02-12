@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from sentence_transformers import SentenceTransformer
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from transformers import AutoTokenizer
 
 from inception import routes
 from inception.config import settings
@@ -50,10 +51,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             logger.info(
                 f"Attempting to initialize embedding service (attempt {attempt + 1}/{max_retries})"
             )
-            model = SentenceTransformer(settings.transformer_model_name)
+            model = SentenceTransformer(
+                settings.transformer_model_name,
+                revision=settings.transformer_model_version,
+            )
+            tokenizer = AutoTokenizer.from_pretrained(
+                settings.transformer_model_name
+            )
             embedding_service = EmbeddingService(
                 model=model,
-                max_words=settings.max_words,
+                tokenizer=tokenizer,
+                max_tokens=settings.max_tokens,
+                overlap_ratio=settings.overlap_ratio,
                 processing_batch_size=settings.processing_batch_size,
             )
             logger.info("Embedding service initialized successfully")

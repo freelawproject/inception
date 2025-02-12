@@ -5,6 +5,7 @@ from itertools import islice
 import torch
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
 
 from inception.config import settings
 from inception.metrics import CHUNK_COUNT, MODEL_LOAD_TIME
@@ -16,19 +17,23 @@ class EmbeddingService:
     def __init__(
         self,
         model: SentenceTransformer,
-        max_words: int,
+        tokenizer: AutoTokenizer,
+        max_tokens: int,
+        overlap_ratio: float,
         processing_batch_size: int,
     ):
         start_time = time.time()
         try:
             self.model = model
+            self.tokenizer = tokenizer
             device = (
                 "cpu"
                 if settings.force_cpu
                 else ("cuda" if torch.cuda.is_available() else "cpu")
             )
             self.gpu_model = model.to(device)
-            self.max_words = max_words
+            self.max_tokens = max_tokens
+            self.num_overlap_sentences = int(max_tokens * overlap_ratio)
             self.processing_batch_size = processing_batch_size
             if device == "cuda":
                 self.pool = self.gpu_model.start_multi_process_pool()
@@ -47,28 +52,74 @@ class EmbeddingService:
             logger.error(f"Error stopping model pool: {str(e)}")
 
     def split_text_into_chunks(self, text: str) -> list[str]:
-        """Split text into chunks based on sentences, not exceeding max_words"""
+        """Split text into chunks based on sentences, not exceeding max_tokens, with sentence overlap"""
+
+        # Split the text to sentences & encode sentences with tokenizer
         sentences = sent_tokenize(text)
+        encoded_sentences = [
+            self.tokenizer.encode(sentence, add_special_tokens=False)
+            for sentence in sentences
+        ]
+        lead_text = "search_document: "
+        lead_tokens = self.tokenizer.encode(lead_text)
+        lead_len = len(lead_tokens)
         chunks = []
-        current_chunk = []
-        current_word_count = 0
+        current_chunks: list[str] = []
+        current_token_counts = len(lead_tokens)
 
-        for sentence in sentences:
-            sentence_words = sentence.split()
-            sentence_word_count = len(sentence_words)
+        for sentence_tokens in encoded_sentences:
+            sentence_len = len(sentence_tokens)
+            # if the current sentence itself is above max_tokens
+            if lead_len + sentence_len > self.max_tokens:
+                # store the previous chunk
+                if current_chunks:
+                    chunks.append(lead_text + " ".join(current_chunks))
+                # truncate the sentence and store the truncated sentence as its own chunk
+                truncated_sentence = self.tokenizer.decode(
+                    sentence_tokens[: (self.max_tokens - len(lead_tokens))]
+                )
+                chunks.append(lead_text + truncated_sentence)
 
-            if current_word_count + sentence_word_count <= self.max_words:
-                current_chunk.append(sentence)
-                current_word_count += sentence_word_count
-            else:
-                if current_chunk:
-                    chunks.append(" ".join(current_chunk))
-                current_chunk = [sentence]
-                current_word_count = sentence_word_count
+                # start a new chunk with no overlap (because adding the current sentence will exceed the max_tokens)
+                current_chunks = []
+                current_token_counts = lead_len
+                continue
 
-        if current_chunk:
-            chunks.append(" ".join(current_chunk))
+            # if adding the new sentence will cause the chunk to exceed max_tokens
+            if current_token_counts + sentence_len > self.max_tokens:
+                overlap_sentences = current_chunks[
+                    -max(0, self.num_overlap_sentences) :
+                ]
+                # store the previous chunk
+                if current_chunks:
+                    chunks.append(lead_text + " ".join(current_chunks))
 
+                overlap_token_counts = self.tokenizer.encode(
+                    " ".join(overlap_sentences), add_special_tokens=False
+                )
+                # If the sentence with the overlap exceeds the limit, start a new chunk without overlap.
+                if (
+                    lead_len + len(overlap_token_counts) + sentence_len
+                    > self.max_tokens
+                ):
+                    current_chunks = [self.tokenizer.decode(sentence_tokens)]
+                    current_token_counts = lead_len + sentence_len
+                else:
+                    current_chunks = overlap_sentences + [
+                        self.tokenizer.decode(sentence_tokens)
+                    ]
+                    current_token_counts = (
+                        lead_len + len(overlap_token_counts) + sentence_len
+                    )
+                continue
+
+            # if within max_tokens, continue to add the new sentence to the current chunk
+            current_chunks.append(self.tokenizer.decode(sentence_tokens))
+            current_token_counts += len(sentence_tokens)
+
+        # store the last chunk if it has any content
+        if current_chunks:
+            chunks.append(lead_text + " ".join(current_chunks))
         return chunks
 
     async def generate_query_embedding(self, text: str) -> list[float]:
@@ -81,7 +132,7 @@ class EmbeddingService:
         embedding = await asyncio.get_event_loop().run_in_executor(
             None,
             lambda: self.gpu_model.encode(
-                sentences=[processed_text], batch_size=1
+                sentences=[f"search_query: {processed_text}"], batch_size=1
             ),
         )
         return embedding[0].tolist()

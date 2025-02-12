@@ -10,7 +10,7 @@ The service is optimized to handle two main use cases:
 
 ## Features
 
-- Specialized text embedding generation for legal documents using the `sentence-transformers/multi-qa-mpnet-base-dot-v1`
+- Specialized text embedding generation for legal documents using the `nomic-ai/modernbert-embed-base`
 - Intelligent text chunking optimized for court opinions, based on sentence boundaries
 - Dedicated CPU-based processing for search queries, ensuring fast response times
 - GPU acceleration support for processing lengthy court opinions
@@ -31,15 +31,27 @@ cp .env.example .env
 Model Settings:
 - `TRANSFORMER_MODEL_NAME`
 
-    Default: `sentence-transformers/multi-qa-mpnet-base-dot-v1`
+    Default: `nomic-ai/modernbert-embed-base`
 
     The name or path of the SentenceTransformer model to use for generating embeddings.
 
-- `MAX_WORDS`
+- `TRANSFORMER_MODEL_VERSION`
 
-    Default: `350` (Range: 1–1000)
+    Default: `main`
 
-    Maximum number of words per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks.
+    The version of the SentenceTransformer model to use for generating embeddings. Use `main` for the latest version.
+
+- `MAX_TOKENS`
+
+    Default: `8192` (Range: 512–10000)
+
+    Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks based on sentence boundaries. If a sentence exceeds this limit, it is truncated. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries.
+
+- `OVERLAP_RATIO`
+
+    Default: `0.002` (Range: 0-0.01)
+
+    The ratio to calculate the number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. `num_overlap_sentences = int(MAX_TOKENS * OVERLAP_RATIO)`.
 
 - `MIN_TEXT_LENGTH`
 
@@ -192,6 +204,22 @@ curl http://localhost:8005
 # Should return: "Heartbeat detected."
 ```
 
+### Running the Service Outside of Docker
+
+1. Activate the venv
+```bash
+source .venv/bin/activate
+```
+
+2. Start the microservice
+```bash
+uvicorn inception.main:app \
+        --host 0.0.0.0 \
+        --port 8005 \
+        --log-level debug \
+        --reload
+```
+
 ## Running tests
 ```bash
 # Run all the tests
@@ -272,7 +300,8 @@ response = requests.post(
         },
     timeout=20,
 )
-batch_embeddings = response.json()["embeddings"]
+document_1_embeddings = response.json()[0]["embeddings"]
+document_2_embeddings = response.json()[1]["embeddings"]
 ```
 
 ## Contributing
@@ -291,6 +320,43 @@ docker exec -it inception-embedding-service pre-commit run --all-files
 - Use type hints and make sure mypy passes:
 ```bash
 docker exec -it inception-embedding-service mypy inception
+```
+
+### Updating Dependencies
+
+1. The best way is to update the dependencies in Docker
+
+Step 1: Build the docker image
+```bash
+docker compose -f docker-compose.dev.yml build --no-cache
+```
+
+Step 2: Spin-up the docker image
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+Step 3: Add the new dependencies
+```bash
+docker exec -it inception-embedding-service uv add "transformers>=4.48.0,<5.0.0"
+```
+
+2. Alternatively, add the dependency to your list of dependencies in `pyproject.toml`:
+`"transformers>=4.48.0,<5.0.0"`
+Then run:
+```bash
+docker exec -it inception-embedding-service uv lock
+```
+This will rebuild the `uv.lock` file, adding the new dependency and updating other dependencies if available, while ensuring they match the specified version constraints.
+
+3. Alternatively, use uv to add or update dependencies outside of Docker if dependency conflicts arise when resolving them within Docker. This can happen when the development container platform mismatches the production or testing target platform.
+
+```bash
+uv add "transformers>=4.48.0,<5.0.0"
+```
+
+```bash
+uv lock
 ```
 
 ## Monitoring
