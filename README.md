@@ -341,14 +341,16 @@ Step 3: Add the new dependencies
 docker exec -it inception-embedding-service uv add "transformers>=4.48.0,<5.0.0"
 ```
 
-Step 4: Sync the new dependencies
+2. Alternatively, add the dependency to your list of dependencies in `pyproject.toml`:
+`"transformers>=4.48.0,<5.0.0"`
+Then run:
 ```bash
 docker exec -it inception-embedding-service uv lock
 ```
-Should see the new dependencies in `uv.lock` and `pyproject.toml`
+This will rebuild the `uv.lock` file, adding the new dependency and updating other dependencies if available, while ensuring they match the specified version constraints.
 
+3. Alternatively, use uv to add or update dependencies outside of Docker if dependency conflicts arise when resolving them within Docker. This can happen when the development container platform mismatches the production or testing target platform.
 
-2. Alternatively, use uv to update dependencies outside of Docker
 ```bash
 uv add "transformers>=4.48.0,<5.0.0"
 ```
