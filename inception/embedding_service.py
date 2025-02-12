@@ -56,27 +56,24 @@ class EmbeddingService:
 
         # Split the text to sentences & encode sentences with tokenizer
         sentences = sent_tokenize(text)
-        sentence_dict = {}
-        for i, sentence in enumerate(sentences):
-            sentence_tokens = self.tokenizer.encode(
-                sentence, add_special_tokens=False
-            )
-            sentence_dict[i] = sentence_tokens
-
+        encoded_sentences = [
+            self.tokenizer.encode(sentence, add_special_tokens=False)
+            for sentence in sentences
+        ]
         lead_text = "search_document: "
         lead_tokens = self.tokenizer.encode(lead_text)
+        lead_len = len(lead_tokens)
         chunks = []
         current_chunks: list[str] = []
         current_token_counts = len(lead_tokens)
 
-        for sentence_index, sentence_tokens in sentence_dict.items():
-
+        for sentence_tokens in encoded_sentences:
+            sentence_len = len(sentence_tokens)
             # if the current sentence itself is above max_tokens
-            if len(lead_tokens) + len(sentence_tokens) > self.max_tokens:
+            if lead_len + sentence_len > self.max_tokens:
                 # store the previous chunk
                 if current_chunks:
                     chunks.append(lead_text + " ".join(current_chunks))
-
                 # truncate the sentence and store the truncated sentence as its own chunk
                 truncated_sentence = self.tokenizer.decode(
                     sentence_tokens[: (self.max_tokens - len(lead_tokens))]
@@ -85,58 +82,44 @@ class EmbeddingService:
 
                 # start a new chunk with no overlap (because adding the current sentence will exceed the max_tokens)
                 current_chunks = []
-                current_token_counts = len(lead_tokens)
+                current_token_counts = lead_len
+                continue
 
             # if adding the new sentence will cause the chunk to exceed max_tokens
-            elif current_token_counts + len(sentence_tokens) > self.max_tokens:
+            if current_token_counts + sentence_len > self.max_tokens:
+                overlap_sentences = current_chunks[
+                    -max(0, self.num_overlap_sentences) :
+                ]
                 # store the previous chunk
                 if current_chunks:
                     chunks.append(lead_text + " ".join(current_chunks))
 
-                # find out the sentences to overlap
-                overlap_sentences = current_chunks[
-                    -max(0, self.num_overlap_sentences) :
-                ]
                 overlap_token_counts = self.tokenizer.encode(
                     " ".join(overlap_sentences), add_special_tokens=False
                 )
-
-                # if adding the overlap will cause the sentence to exceed the token limits,
-                # start a new chunk with only the current sentence and no overlap
+                # If the sentence with the overlap exceeds the limit, start a new chunk without overlap.
                 if (
-                    len(lead_tokens)
-                    + len(overlap_token_counts)
-                    + len(sentence_tokens)
+                    lead_len + len(overlap_token_counts) + sentence_len
                     > self.max_tokens
                 ):
                     current_chunks = [self.tokenizer.decode(sentence_tokens)]
-                    current_token_counts = len(lead_tokens) + len(
-                        sentence_tokens
-                    )
-
-                # overwise, add the overlap to the new chunk in addition to the current sentence
+                    current_token_counts = lead_len + sentence_len
                 else:
                     current_chunks = overlap_sentences + [
                         self.tokenizer.decode(sentence_tokens)
                     ]
                     current_token_counts = (
-                        len(lead_tokens)
-                        + len(overlap_token_counts)
-                        + len(sentence_tokens)
+                        lead_len + len(overlap_token_counts) + sentence_len
                     )
+                continue
 
             # if within max_tokens, continue to add the new sentence to the current chunk
-            else:
-                current_chunks.append(self.tokenizer.decode(sentence_tokens))
-                current_token_counts += len(sentence_tokens)
+            current_chunks.append(self.tokenizer.decode(sentence_tokens))
+            current_token_counts += len(sentence_tokens)
 
-            # store the last chunk if it has any content
-            if (
-                sentence_index == len(sentence_dict.keys()) - 1
-                and current_chunks
-            ):
-                chunks.append(lead_text + " ".join(current_chunks))
-
+        # store the last chunk if it has any content
+        if current_chunks:
+            chunks.append(lead_text + " ".join(current_chunks))
         return chunks
 
     async def generate_query_embedding(self, text: str) -> list[float]:
