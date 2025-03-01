@@ -32,9 +32,6 @@ gpu = [
   "torch>=2.5.1",
 ]
 
-[tool.setuptools]
-py-modules = []
-
 [tool.uv]
 conflicts = [
     [

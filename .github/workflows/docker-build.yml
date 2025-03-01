@@ -24,4 +24,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and Push
         run: |
-          make push --file docker/Makefile -e VERSION=$(git rev-parse --short HEAD)
+          make push --file Makefile -e VERSION=$(git rev-parse --short HEAD)
