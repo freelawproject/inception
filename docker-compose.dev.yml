@@ -4,6 +4,7 @@ services:
   inception-embedding-service:
     container_name: inception-embedding-service
     build:
+      dockerfile: docker/Dockerfile
       context: .
       args:
         TARGET_ENV: dev
