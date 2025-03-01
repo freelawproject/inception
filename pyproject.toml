@@ -33,7 +33,7 @@ gpu = [
 ]
 
 [tool.setuptools]
-py-modules = ["inception"]
+py-modules = []
 
 [tool.uv]
 conflicts = [
