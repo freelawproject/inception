@@ -32,7 +32,6 @@ gpu = [
   "torch>=2.5.1",
 ]
 
-
 [tool.uv]
 conflicts = [
     [
