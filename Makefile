@@ -36,13 +36,13 @@ multiarch_image:
 	export DOCKER_CLI_EXPERIMENTAL=enabled
 	$(DOCKER) buildx rm
 	$(DOCKER) buildx create --use --name flp-builder
-	$(DOCKER) buildx build --platform linux/amd64,linux/arm64 -t $(DOCKER_REPOSITORY):latest -t $(DOCKER_REPOSITORY):$(VERSION) .
+	$(DOCKER) buildx build --platform linux/amd64,linux/arm64 -t $(DOCKER_REPOSITORY):latest -t $(DOCKER_REPOSITORY):$(VERSION) --file docker/Dockerfile .
 
 multiarch_push: multiarch_image
-	$(DOCKER) buildx build --push --platform linux/amd64,linux/arm64 -t $(DOCKER_REPOSITORY):latest -t $(DOCKER_REPOSITORY):$(VERSION) .
+	$(DOCKER) buildx build --push --platform linux/amd64,linux/arm64 -t $(DOCKER_REPOSITORY):latest -t $(DOCKER_REPOSITORY):$(VERSION) --file docker/Dockerfile .
 
 x86_push:
 	export DOCKER_CLI_EXPERIMENTAL=enabled
 	$(DOCKER) buildx rm
 	$(DOCKER) buildx create --use --name flp-builder
-	$(DOCKER) buildx build --push --platform linux/amd64 -t $(DOCKER_REPOSITORY):latest -t $(DOCKER_REPOSITORY):$(VERSION) .
+	$(DOCKER) buildx build --push --platform linux/amd64 -t $(DOCKER_REPOSITORY):latest -t $(DOCKER_REPOSITORY):$(VERSION) --file docker/Dockerfile .
