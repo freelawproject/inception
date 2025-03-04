@@ -1,0 +1,38 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 10
+  groups:
+    django-extensions:
+      patterns:
+        - "django-*"
+      exclude-patterns:
+        - "django-stubs"
+    stub-packages:
+      patterns:
+        - "types-*"
+        - "django-stubs"
+  ignore:
+  # Ignore all tooling (it can get old, it's mature enough)
+  - dependency-name: selenium
+  - dependency-name: black
+  - dependency-name: pylint
+  - dependency-name: flake8
+  - dependency-name: isort
+  - dependency-name: mypy
+  - dependency-name: flynt
+  # Ignore all patch updates.
+  - dependency-name: '*'
+    update-types: ["version-update:semver-patch"]
+
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: monthly
+  groups:
+    core:
+      patterns:
+        - 'actions/*' # The core actions offered by Github
