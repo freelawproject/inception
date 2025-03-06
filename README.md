@@ -1,8 +1,10 @@
-# inception
-Our microservice for generating embeddings from blocks of text
-# Inception v2 - Text Embedding Service
+<img align="right" src="https://github.com/user-attachments/assets/7ec21ced-43a3-4c72-995c-70c3832d594e" alt="A logo for the project showing a document and some AI sparkles.">
 
-A high-performance FastAPI service for generating text embeddings using SentenceTransformers, specifically designed for processing legal documents and search queries. The service efficiently handles both short search queries and lengthy court opinions, generating semantic embeddings that can be used for document similarity matching and semantic search applications. It includes support for GPU acceleration when available.
+# Inception
+
+Inception is our microservice for generating embeddings from blocks of text.
+
+It is a high-performance FastAPI service that generates text embeddings using SentenceTransformers, specifically designed for processing legal documents and search queries. The service efficiently handles both short search queries and lengthy court opinions, generating semantic embeddings that can be used for document similarity matching and semantic search applications. It includes support for GPU acceleration when available.
 
 The service is optimized to handle two main use cases:
 - Embedding search queries: Quick, CPU-based processing for short search queries
