@@ -12,7 +12,7 @@ The service is optimized to handle two main use cases:
 
 ## Features
 
-- Specialized text embedding generation for legal documents using the `nomic-ai/modernbert-embed-base`
+- Specialized text embedding generation for legal documents using `Free-Law-Project/modernbert-embed-base_finetune_512`, a `sentence_transformer` model finetuned on top of `nomic-ai/modernbert-embed-base`
 - Intelligent text chunking optimized for court opinions, based on sentence boundaries
 - Dedicated CPU-based processing for search queries, ensuring fast response times
 - GPU acceleration support for processing lengthy court opinions
@@ -33,7 +33,7 @@ cp .env.example .env
 Model Settings:
 - `TRANSFORMER_MODEL_NAME`
 
-    Default: `nomic-ai/modernbert-embed-base`
+    Default: `Free-Law-Project/modernbert-embed-base_finetune_512`
 
     The name or path of the SentenceTransformer model to use for generating embeddings.
 
@@ -45,13 +45,13 @@ Model Settings:
 
 - `MAX_TOKENS`
 
-    Default: `8192` (Range: 512–10000)
+    Default: `512` (Range: 256–10000)
 
     Maximum number of tokens per chunk when splitting text. If the text exceeds this limit, it is split into multiple chunks based on sentence boundaries. If a sentence exceeds this limit, it is truncated. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries.
 
 - `OVERLAP_RATIO`
 
-    Default: `0.002` (Range: 0-0.01)
+    Default: `0.004` (Range: 0-0.01)
 
     The ratio to calculate the number of sentences to overlap between chunks when splitting text. Sentences are defined by `nltk.tokenize.sent_tokenize`, which follows English heuristics to detect sentence boundaries. `num_overlap_sentences = int(MAX_TOKENS * OVERLAP_RATIO)`.
 

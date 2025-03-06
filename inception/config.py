@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     transformer_model_name: str = Field(
-        "nomic-ai/modernbert-embed-base",
+        "Free-Law-Project/modernbert-embed-base_finetune_512",
         description="Name of the transformer model to use",
     )
     transformer_model_version: str = Field(
@@ -12,10 +12,10 @@ class Settings(BaseSettings):
         description="Version of the transformer model to use",
     )
     max_tokens: int = Field(
-        8192, ge=512, le=10000, description="Maximum tokens per chunk"
+        512, ge=256, le=10000, description="Maximum tokens per chunk"
     )
     overlap_ratio: float = Field(
-        0.002,
+        0.004,
         ge=0,
         le=0.01,
         description="Ratio to calculate number of sentence overlap between chunks",
