@@ -12,7 +12,7 @@ The service is optimized to handle two main use cases:
 
 ## Features
 
-- Specialized text embedding generation for legal documents using `Free-Law-Project/modernbert-embed-base_finetune_512`, a `sentence_transformer` model finetuned on top of `nomic-ai/modernbert-embed-base`
+- Specialized text embedding generation for legal documents using `freelawproject/modernbert-embed-base_finetune_512`, a `sentence_transformer` model finetuned on top of `nomic-ai/modernbert-embed-base`
 - Intelligent text chunking optimized for court opinions, based on sentence boundaries
 - Dedicated CPU-based processing for search queries, ensuring fast response times
 - GPU acceleration support for processing lengthy court opinions
@@ -33,7 +33,7 @@ cp .env.example .env
 Model Settings:
 - `TRANSFORMER_MODEL_NAME`
 
-    Default: `Free-Law-Project/modernbert-embed-base_finetune_512`
+    Default: `freelawproject/modernbert-embed-base_finetune_512`
 
     The name or path of the SentenceTransformer model to use for generating embeddings.
 
