@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     transformer_model_name: str = Field(
-        "Free-Law-Project/modernbert-embed-base_finetune_512",
+        "freelawproject/modernbert-embed-base_finetune_512",
         description="Name of the transformer model to use",
     )
     transformer_model_version: str = Field(

@@ -1,5 +1,6 @@
 import asyncio
 import os
+import zipfile
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -19,7 +20,7 @@ from inception.utils import logger
 
 try:
     nltk.data.find("tokenizers/punkt_tab")
-except LookupError:
+except (LookupError, zipfile.BadZipFile):
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
 
