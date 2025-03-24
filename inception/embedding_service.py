@@ -163,8 +163,13 @@ class EmbeddingService:
             ),
         )
 
+        # Clean up the chunks
+        clean_chunks = [
+            chunk.replace("search_document: ", "") for chunk in all_chunks
+        ]
+
         # Create pairs of embeddings and corresponding chunks
-        embedding_chunk_pairs = zip(embeddings, all_chunks)
+        embedding_chunk_pairs = zip(embeddings, clean_chunks)
         # Split the pairs into groups based on the number of chunks per text
         sliced_results = [
             list(islice(embedding_chunk_pairs, 0, i)) for i in chunk_counts
