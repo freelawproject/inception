@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  inception-embedding-service:
+    container_name: inception-embedding-service
+    privileged: true
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    runtime: nvidia
+    build:
+      context: .
+      args:
+        TARGET_ENV: prod
+    ports:
+      - "8005:8005"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    shm_size: '16gb'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu,compute]

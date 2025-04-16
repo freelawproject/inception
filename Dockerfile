@@ -13,7 +13,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 
 # The installer requires curl (and certificates) to download the latest uv release
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends && apt-get install build-essential -y \
     curl ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 
