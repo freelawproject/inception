@@ -3,6 +3,9 @@ import time
 from itertools import islice
 
 import torch
+
+torch.set_float32_matmul_precision("high")
+
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
@@ -31,12 +34,13 @@ class EmbeddingService:
                 if settings.force_cpu
                 else ("cuda" if torch.cuda.is_available() else "cpu")
             )
+            if device == "cuda":
+                logger.info(f"CUDA device: {torch.cuda.current_device()}")
             self.gpu_model = model.to(device)
+            self.gpu_model = torch.compile(self.gpu_model)  # type: ignore
             self.max_tokens = max_tokens
             self.num_overlap_sentences = int(max_tokens * overlap_ratio)
             self.processing_batch_size = processing_batch_size
-            if device == "cuda":
-                self.pool = self.gpu_model.start_multi_process_pool()
             MODEL_LOAD_TIME.observe(time.time() - start_time)
             logger.info(f"Model loaded successfully on {device}")
         except Exception as e:
