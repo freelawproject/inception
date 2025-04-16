@@ -24,7 +24,7 @@ except (LookupError, zipfile.BadZipFile):
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
 except FileExistsError:
-   nltk.data.find("tokenizers/punkt_tab")
+    nltk.data.find("tokenizers/punkt_tab")
 
 
 # Initialize Sentry
