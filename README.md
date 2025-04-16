@@ -8,7 +8,7 @@ It is a high-performance FastAPI service that generates text embeddings using Se
 
 The service is optimized to handle two main use cases:
 - Embedding search queries: Quick, CPU-based processing for short search queries
-- Embedding court opinions: GPU-accelerated processing for longer legal documents, with intelligent text chunking to maintain context
+- Embedding court opinions: NVIDIA CUDA GPU-accelerated processing for longer legal documents, with intelligent text chunking to maintain context
 
 ## Features
 
@@ -180,19 +180,52 @@ Build:
 docker build -t inception:latest --build-arg TARGET_ENV=prod .
 ```
 
-Run:
+Run with CPU:
 ```bash
 docker run -d -p 8005:8005 inception
 ```
 
+Run with GPU:
+```bash
+docker run -d \
+  --rm \
+  --runtime=nvidia \
+  -e NVIDIA_VISIBLE_DEVICES=all \
+  -e NVIDIA_DRIVER_CAPABILITIES=compute \
+  --shm-size=16g \
+  -p 8005:8005 \
+  inception
+```
+
 Run from hosted image:
+
+with CPU:
 ```bash
 docker run -d -p 8005:8005 freelawproject/inception:v2
 ```
 
-For development run it with docker compose:
+with GPU:
+```bash
+docker run -d \
+  --rm \
+  --runtime=nvidia \
+  -e NVIDIA_VISIBLE_DEVICES=all \
+  -e NVIDIA_DRIVER_CAPABILITIES=compute \
+  --shm-size=16g \
+  -p 8005:8005 \
+  freelawproject/inception:v2
+```
+
+For development, run it with docker compose:
+
+with CPU:
 ```bash
 docker compose -f docker-compose.dev.yml up
+```
+
+with GPU:
+```bash
+docker compose -f docker-compose.dev-gpu.yml up
 ```
 
 To handle more concurrent tasks, increase the number of workers:
@@ -203,8 +236,8 @@ docker run -d -p 8005:8005 -e EMBEDDING_WORKERS=4 freelawproject/inception:v2
 Check that the service is running:
 ```bash
 curl http://localhost:8005
-# Should return: "Heartbeat detected."
 ```
+Should return: "Heartbeat detected."
 
 ### Running the Service Outside of Docker
 
@@ -223,13 +256,15 @@ uvicorn inception.main:app \
 ```
 
 ## Running tests
+
+Run all the tests:
 ```bash
-# Run all the tests
 docker exec -it inception-embedding-service pytest tests -v
 ```
+
+Run tests from a marker:
 ```bash
-  # Run tests from a marker
-  docker exec -it inception-embedding-service pytest -m embedding_generation -v
+docker exec -it inception-embedding-service pytest -m embedding_generation -v
 ```
 See all available markers in [pytest.ini](pytest.ini)
 
@@ -329,13 +364,27 @@ docker exec -it inception-embedding-service mypy inception
 1. The best way is to update the dependencies in Docker
 
 Step 1: Build the docker image
+
+with CPU:
 ```bash
 docker compose -f docker-compose.dev.yml build --no-cache
 ```
 
+with GPU:
+```bash
+docker compose -f docker-compose.dev-gpu.yml build --no-cache
+```
+
 Step 2: Spin-up the docker image
+
+with CPU:
 ```bash
 docker compose -f docker-compose.dev.yml up
+```
+
+with GPU:
+```bash
+docker compose -f docker-compose.dev-gpu.yml up
 ```
 
 Step 3: Add the new dependencies
