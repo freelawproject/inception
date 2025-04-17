@@ -180,7 +180,7 @@ class EmbeddingService:
         sliced_results = [
             list(islice(embedding_chunk_pairs, 0, i)) for i in chunk_counts
         ]
-        logger.info(f"sliced_results {sliced_results}")
+
         for text_embedding in sliced_results:
             text_embeddings_list = []
             for idx, embedding_chunk_pair in enumerate(text_embedding):
