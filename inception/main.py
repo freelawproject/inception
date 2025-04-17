@@ -88,7 +88,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         # Shutdown
         try:
             if embedding_service:
-                embedding_service.__del__()
                 embedding_service = None
         except Exception as e:
             sentry_sdk.capture_exception(e)

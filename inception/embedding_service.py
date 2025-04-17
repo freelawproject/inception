@@ -37,7 +37,6 @@ class EmbeddingService:
             if device == "cuda":
                 logger.info(f"CUDA device: {torch.cuda.current_device()}")
             self.gpu_model = model.to(device)
-            self.gpu_model = torch.compile(self.gpu_model)  # type: ignore
             self.max_tokens = max_tokens
             self.num_overlap_sentences = int(max_tokens * overlap_ratio)
             self.processing_batch_size = processing_batch_size
@@ -46,14 +45,6 @@ class EmbeddingService:
         except Exception as e:
             logger.error(f"Failed to initialize embedding service: {str(e)}")
             raise
-
-    def __del__(self):
-        try:
-            if hasattr(self, "pool"):
-                self.gpu_model.stop_multi_process_pool(self.pool)
-                logger.info("Model pool stopped successfully")
-        except Exception as e:
-            logger.error(f"Error stopping model pool: {str(e)}")
 
     def split_text_into_chunks(self, text: str) -> list[str]:
         """Split text into chunks based on sentences, not exceeding max_tokens, with sentence overlap"""
@@ -152,12 +143,20 @@ class EmbeddingService:
         all_chunks = []
         chunk_counts = []
 
+        logger.info(
+            f"Generating embedding for {len(texts)} documents of {sum(len(s) for s in texts)} characters"
+        )
+        start_time = time.time()
+
         # Collect chunks
         for text in texts:
             chunks = self.split_text_into_chunks(text)
             CHUNK_COUNT.labels(endpoint="text").inc(len(chunks))
             all_chunks.extend(chunks)
             chunk_counts.append(len(chunks))
+
+        chunk_time = time.time()
+        logger.info(f"Chunking took {chunk_time - start_time:.2f} seconds")
 
         # Generate embeddings
         embeddings = await asyncio.get_event_loop().run_in_executor(
@@ -166,6 +165,9 @@ class EmbeddingService:
                 sentences=all_chunks, batch_size=self.processing_batch_size
             ),
         )
+
+        embed_time = time.time()
+        logger.info(f"Embedding took {embed_time - chunk_time:.2f} seconds")
 
         # Clean up the chunks
         clean_chunks = [
@@ -178,7 +180,7 @@ class EmbeddingService:
         sliced_results = [
             list(islice(embedding_chunk_pairs, 0, i)) for i in chunk_counts
         ]
-        logger.info(f"sliced_results {sliced_results}")
+
         for text_embedding in sliced_results:
             text_embeddings_list = []
             for idx, embedding_chunk_pair in enumerate(text_embedding):
@@ -191,6 +193,9 @@ class EmbeddingService:
                     )
                 )
             all_embeddings.append(text_embeddings_list)
+
+        end_time = time.time()
+        logger.info(f"Wrap-up took {end_time - embed_time:.2f} seconds")
 
         return all_embeddings
 
