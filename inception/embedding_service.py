@@ -143,6 +143,8 @@ class EmbeddingService:
         all_chunks = []
         chunk_counts = []
 
+        logger.info(f"Generating embedding for {len(texts)} documents of {sum(len(s) for s in texts)} charsacters")
+
         # Collect chunks
         for text in texts:
             chunks = self.split_text_into_chunks(text)
