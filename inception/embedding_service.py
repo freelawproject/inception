@@ -46,14 +46,6 @@ class EmbeddingService:
             logger.error(f"Failed to initialize embedding service: {str(e)}")
             raise
 
-    def __del__(self):
-        try:
-            if hasattr(self, "pool"):
-                self.gpu_model.stop_multi_process_pool(self.pool)
-                logger.info("Model pool stopped successfully")
-        except Exception as e:
-            logger.error(f"Error stopping model pool: {str(e)}")
-
     def split_text_into_chunks(self, text: str) -> list[str]:
         """Split text into chunks based on sentences, not exceeding max_tokens, with sentence overlap"""
 
