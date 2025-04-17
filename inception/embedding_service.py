@@ -146,6 +146,7 @@ class EmbeddingService:
         logger.info(
             f"Generating embedding for {len(texts)} documents of {sum(len(s) for s in texts)} characters"
         )
+        start_time = time.time()
 
         # Collect chunks
         for text in texts:
@@ -154,6 +155,9 @@ class EmbeddingService:
             all_chunks.extend(chunks)
             chunk_counts.append(len(chunks))
 
+        chunk_time = time.time()
+        logger.info(f"Chunking took {chunk_time - start_time:.2f} seconds")
+
         # Generate embeddings
         embeddings = await asyncio.get_event_loop().run_in_executor(
             None,
@@ -161,6 +165,9 @@ class EmbeddingService:
                 sentences=all_chunks, batch_size=self.processing_batch_size
             ),
         )
+
+        embed_time = time.time()
+        logger.info(f"Embedding took {embed_time - chunk_time:.2f} seconds")
 
         # Clean up the chunks
         clean_chunks = [
@@ -186,6 +193,9 @@ class EmbeddingService:
                     )
                 )
             all_embeddings.append(text_embeddings_list)
+
+        end_time = time.time()
+        logger.info(f"Wrap-up took {end_time - embed_time:.2f} seconds")
 
         return all_embeddings
 
