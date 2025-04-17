@@ -37,7 +37,6 @@ class EmbeddingService:
             if device == "cuda":
                 logger.info(f"CUDA device: {torch.cuda.current_device()}")
             self.gpu_model = model.to(device)
-            self.gpu_model = torch.compile(self.gpu_model)  # type: ignore
             self.max_tokens = max_tokens
             self.num_overlap_sentences = int(max_tokens * overlap_ratio)
             self.processing_batch_size = processing_batch_size
