@@ -75,7 +75,7 @@ async def create_text_embedding(request: Request):
         raw_text = await request.body()
         text = raw_text.decode("utf-8")
         validate_text_length(text, "text")
-        result = await embedding_service.generate_text_embeddings([text])
+        result = await embedding_service.generate_text_embeddings({0: text})
 
         # Clean up GPU memory after processing large texts
         text_length = len(text.strip())
@@ -87,7 +87,7 @@ async def create_text_embedding(request: Request):
         PROCESSING_TIME.labels(endpoint="text").observe(
             time.time() - start_time
         )
-        return TextResponse(embeddings=result[0])
+        return result[0]
     except Exception as e:
         handle_exception(e, "text")
 
@@ -114,14 +114,8 @@ async def create_batch_text_embeddings(request: BatchTextRequest):
         for doc in request.documents:
             validate_text_length(doc.text, "batch", doc.id)
 
-        texts = [doc.text for doc in request.documents]
-        embeddings_list = await embedding_service.generate_text_embeddings(
-            texts
-        )
-        results = [
-            TextResponse(id=doc.id, embeddings=embeddings)
-            for doc, embeddings in zip(request.documents, embeddings_list)
-        ]
+        texts = {doc.id: doc.text for doc in request.documents}
+        results = await embedding_service.generate_text_embeddings(texts)
         # Clean up GPU memory after batch processing
         embedding_service.cleanup_gpu_memory()
         PROCESSING_TIME.labels(endpoint="batch").observe(

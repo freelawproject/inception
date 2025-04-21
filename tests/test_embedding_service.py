@@ -213,7 +213,7 @@ class TestInputValidation:
                 "name": "empty batch",
                 "input": {"documents": []},
                 "expected_status": HTTPStatus.UNPROCESSABLE_ENTITY,
-                "expected_error": "empty text list",
+                "expected_error": "empty text dict",
             },
             {
                 "name": "invalid document",
