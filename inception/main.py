@@ -67,6 +67,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 max_tokens=settings.max_tokens,
                 overlap_ratio=settings.overlap_ratio,
                 processing_batch_size=settings.processing_batch_size,
+                max_workers=settings.max_workers,
             )
             logger.info("Embedding service initialized successfully")
             break
