@@ -25,6 +25,7 @@ class EmbeddingService:
         max_tokens: int,
         overlap_ratio: float,
         processing_batch_size: int,
+        max_workers: int,
     ):
         start_time = time.time()
         try:
@@ -41,6 +42,7 @@ class EmbeddingService:
             self.max_tokens = max_tokens
             self.num_overlap_sentences = int(max_tokens * overlap_ratio)
             self.processing_batch_size = processing_batch_size
+            self.max_workers = max_workers
             MODEL_LOAD_TIME.observe(time.time() - start_time)
             logger.info(f"Model loaded successfully on {device}")
         except Exception as e:
@@ -149,7 +151,7 @@ class EmbeddingService:
         chunk_counts = []
         chunks_by_id = {}
 
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(self.max_workers) as executor:
             futures = {
                 executor.submit(
                     lambda doc_id_text: (

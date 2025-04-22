@@ -110,6 +110,12 @@ Server Settings:
 
     Number of Gunicorn worker processes for serving the embedding service. Increase if you need higher concurrency.
 
+- `MAX_WORKERS`
+
+    Default: `4`
+
+    Number of Threadpool worker processes for chunking. Increase if you need higher concurrency.
+
 GPU Settings:
 - `FORCE_CPU`
 

@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     max_text_length: int = 10_000_000
     max_batch_size: int = 100
     processing_batch_size: int = 8
+    max_workers: int = 4
     pool_timeout: int = (
         3600  # Timeout for multi-process pool operations (seconds)
     )

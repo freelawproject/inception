@@ -46,6 +46,7 @@ def test_embedding_service():
                 else settings.overlap_ratio
             ),
             processing_batch_size=settings.processing_batch_size,
+            max_workers=settings.max_workers,
         )
 
     return _create_service
