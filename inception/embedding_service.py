@@ -1,10 +1,11 @@
 import asyncio
 import time
-from itertools import islice
 
 import torch
 
 torch.set_float32_matmul_precision("high")
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
@@ -12,7 +13,7 @@ from transformers import AutoTokenizer
 
 from inception.config import settings
 from inception.metrics import CHUNK_COUNT, MODEL_LOAD_TIME
-from inception.schemas import ChunkEmbedding
+from inception.schemas import ChunkEmbedding, TextResponse
 from inception.utils import logger, preprocess_text
 
 
@@ -133,30 +134,44 @@ class EmbeddingService:
         return embedding[0].tolist()
 
     async def generate_text_embeddings(
-        self, texts: list[str]
-    ) -> list[list[ChunkEmbedding]]:
-        """Generate embeddings for a list of texts"""
+        self, texts: dict[int, str]
+    ) -> list[TextResponse]:
+        """Generate embeddings for a dict of texts"""
         if not texts:
-            raise ValueError("Empty text list")
+            raise ValueError("Empty text dict")
 
-        all_embeddings = []
-        all_chunks = []
-        chunk_counts = []
+        logger.info(f"Generating embedding for {len(texts)} documents")
 
-        logger.info(
-            f"Generating embedding for {len(texts)} documents of {sum(len(s) for s in texts)} characters"
-        )
         start_time = time.time()
 
-        # Collect chunks
-        for text in texts:
-            chunks = self.split_text_into_chunks(text)
-            CHUNK_COUNT.labels(endpoint="text").inc(len(chunks))
-            all_chunks.extend(chunks)
-            chunk_counts.append(len(chunks))
+        # Chunk the texts
+        all_chunks = []
+        chunk_counts = []
+        chunks_by_id = {}
+
+        with ThreadPoolExecutor() as executor:
+            futures = {
+                executor.submit(
+                    lambda doc_id_text: (
+                        doc_id_text[0],
+                        self.split_text_into_chunks(doc_id_text[1]),
+                    ),
+                    item,
+                ): item[0]
+                for item in texts.items()
+            }
+
+            for future in as_completed(futures):
+                doc_id, chunks = future.result()
+                CHUNK_COUNT.labels(endpoint="text").inc(len(chunks))
+                all_chunks.extend(chunks)
+                chunk_counts.append(len(chunks))
+                chunks_by_id[doc_id] = chunks
 
         chunk_time = time.time()
-        logger.info(f"Chunking took {chunk_time - start_time:.2f} seconds")
+        logger.info(
+            f"Producing {len(all_chunks)} chunks took {chunk_time - start_time:.2f} seconds"
+        )
 
         # Generate embeddings
         embeddings = await asyncio.get_event_loop().run_in_executor(
@@ -167,37 +182,48 @@ class EmbeddingService:
         )
 
         embed_time = time.time()
-        logger.info(f"Embedding took {embed_time - chunk_time:.2f} seconds")
+        logger.info(
+            f"Generating embedding took {embed_time - chunk_time:.2f} seconds"
+        )
 
         # Clean up the chunks
         clean_chunks = [
             chunk.replace("search_document: ", "") for chunk in all_chunks
         ]
 
-        # Create pairs of embeddings and corresponding chunks
-        embedding_chunk_pairs = zip(embeddings, clean_chunks)
-        # Split the pairs into groups based on the number of chunks per text
-        sliced_results = [
-            list(islice(embedding_chunk_pairs, 0, i)) for i in chunk_counts
-        ]
+        # Clean up the embeddings
+        results = []
+        embedding_idx = 0
 
-        for text_embedding in sliced_results:
-            text_embeddings_list = []
-            for idx, embedding_chunk_pair in enumerate(text_embedding):
-                embedding, chunk = embedding_chunk_pair
-                text_embeddings_list.append(
-                    ChunkEmbedding(
-                        chunk_number=idx + 1,
-                        chunk=chunk,
-                        embedding=embedding.tolist(),
-                    )
+        for doc_id, chunk_count in zip(chunks_by_id.keys(), chunk_counts):
+            # Slice the embeddings for the current document's chunks
+            document_embeddings = embeddings[
+                embedding_idx : embedding_idx + chunk_count
+            ]
+            document_chunks = clean_chunks[
+                embedding_idx : embedding_idx + chunk_count
+            ]
+
+            # Store embeddings for the current document
+            doc_results = [
+                ChunkEmbedding(
+                    chunk_number=idx + 1,
+                    chunk=chunk,
+                    embedding=embedding.tolist(),
                 )
-            all_embeddings.append(text_embeddings_list)
+                for idx, (embedding, chunk) in enumerate(
+                    zip(document_embeddings, document_chunks)
+                )
+            ]
+            results.append(TextResponse(id=doc_id, embeddings=doc_results))
+
+            # Increment index for the next document
+            embedding_idx += chunk_count
 
         end_time = time.time()
         logger.info(f"Wrap-up took {end_time - embed_time:.2f} seconds")
 
-        return all_embeddings
+        return results
 
     @staticmethod
     def cleanup_gpu_memory():
