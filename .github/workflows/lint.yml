@@ -11,6 +11,8 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: pre-commit/action@v3.0.0
+
       - name: Install UV
         uses: astral-sh/setup-uv@v4
 
@@ -34,18 +36,5 @@ jobs:
           pwd
           ls -al
 
-      - name: Flynt f-string Formatter
-        run: >
-          flynt .
-          --line-length=79
-          --transform-concats
-          --fail-on-change
-
       - name: mypy Static Type Checker
         run: mypy inception
-
-      - name: Black Code Formatter
-        uses: psf/black@stable
-
-      - name: Isort
-        run: isort --diff .

@@ -1,12 +1,8 @@
 import asyncio
 import time
-
-import torch
-
-torch.set_float32_matmul_precision("high")
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import torch
 from nltk.tokenize import sent_tokenize
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer
@@ -15,6 +11,8 @@ from inception.config import settings
 from inception.metrics import CHUNK_COUNT, MODEL_LOAD_TIME
 from inception.schemas import ChunkEmbedding, TextResponse
 from inception.utils import logger, preprocess_text
+
+torch.set_float32_matmul_precision("high")
 
 
 class EmbeddingService:
