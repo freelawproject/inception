@@ -1,8 +1,8 @@
 import asyncio
 import os
 import zipfile
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import nltk
 import sentry_sdk

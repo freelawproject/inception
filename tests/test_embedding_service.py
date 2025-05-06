@@ -160,9 +160,9 @@ class TestInputValidation:
                 response = client.post(
                     "/api/v1/embed/query", json=case["input"]
                 )
-            assert (
-                response.status_code == case["expected_status"]
-            ), f"Failed on: {case['name']}"
+            assert response.status_code == case["expected_status"], (
+                f"Failed on: {case['name']}"
+            )
             assert case["expected_error"] in response.json()["detail"].lower()
 
     @pytest.mark.validation
@@ -190,9 +190,9 @@ class TestInputValidation:
                     content=case["input"],
                     headers={"Content-Type": "text/plain"},
                 )
-            assert (
-                response.status_code == case["expected_status"]
-            ), f"Failed on: {case['name']}"
+            assert response.status_code == case["expected_status"], (
+                f"Failed on: {case['name']}"
+            )
             assert case["expected_error"] in response.json()["detail"].lower()
 
     @pytest.mark.validation
@@ -234,9 +234,9 @@ class TestInputValidation:
                 response = client.post(
                     "/api/v1/embed/batch", json=case["input"]
                 )
-            assert (
-                response.status_code == case["expected_status"]
-            ), f"Failed on: {case['name']}"
+            assert response.status_code == case["expected_status"], (
+                f"Failed on: {case['name']}"
+            )
             assert case["expected_error"] in response.json()["detail"].lower()
 
 
@@ -270,16 +270,16 @@ class TestTextProcessing:
         tokenizer = test_service.tokenizer
 
         # Basic properties
-        assert (
-            test_service.max_tokens == settings.max_tokens
-        ), "Incorrect max_tokens in test_service"
+        assert test_service.max_tokens == settings.max_tokens, (
+            "Incorrect max_tokens in test_service"
+        )
         assert test_service.num_overlap_sentences == int(
             test_service.max_tokens * settings.overlap_ratio
         ), "Incorrect overlap_ratio in test_service"
         assert len(chunks) > 0, "No chunks were generated"
-        assert all(
-            isinstance(chunk, str) for chunk in chunks
-        ), "Non-string chunk found"
+        assert all(isinstance(chunk, str) for chunk in chunks), (
+            "Non-string chunk found"
+        )
         assert all(
             len(tokenizer.encode(chunk)) <= test_service.max_tokens
             for chunk in chunks
@@ -287,9 +287,9 @@ class TestTextProcessing:
 
         # Lead text verification
         for i, chunk in enumerate(chunks):
-            assert (
-                chunk[:17] == "search_document: "
-            ), f"Chunk {i} does not begin with proper lead text: {chunk[:10]}"
+            assert chunk[:17] == "search_document: ", (
+                f"Chunk {i} does not begin with proper lead text: {chunk[:10]}"
+            )
 
         # Sentence boundary verification
         for i, chunk in enumerate(chunks):
@@ -307,9 +307,9 @@ class TestTextProcessing:
         chunks = [s.replace("search_document: ", "").strip() for s in chunks]
         original_content = "".join(sample_text.split())
         chunked_content = "".join("".join(chunks).split())
-        assert (
-            original_content == chunked_content
-        ), "Content was lost or altered during chunking"
+        assert original_content == chunked_content, (
+            "Content was lost or altered during chunking"
+        )
 
         # Chunk transitions
         for i, chunk in enumerate(chunks):
@@ -319,9 +319,9 @@ class TestTextProcessing:
                 "!",
                 '"',
             }, f"Chunk {i} does not end with proper punctuation: {chunk[-10:]}"
-            assert chunk[
-                0
-            ].isupper(), f"Chunk {i} does not start with uppercase letter: {chunks[:10]}"
+            assert chunk[0].isupper(), (
+                f"Chunk {i} does not start with uppercase letter: {chunks[:10]}"
+            )
 
 
 class TestTextTruncation:
@@ -343,16 +343,16 @@ class TestTextTruncation:
         tokenizer = test_service.tokenizer
 
         # Basic properties
-        assert (
-            test_service.max_tokens == max_tokens
-        ), "Incorrect max_tokens in test_service"
+        assert test_service.max_tokens == max_tokens, (
+            "Incorrect max_tokens in test_service"
+        )
         assert test_service.num_overlap_sentences == int(
             max_tokens * overlap_ratio
         ), "Incorrect overlap_ratio in test_service"
         assert len(chunks) > 0, "No chunks were generated"
-        assert all(
-            isinstance(chunk, str) for chunk in chunks
-        ), "Non-string chunk found"
+        assert all(isinstance(chunk, str) for chunk in chunks), (
+            "Non-string chunk found"
+        )
         assert all(
             len(tokenizer.encode(chunk)) <= test_service.max_tokens
             for chunk in chunks
@@ -360,9 +360,9 @@ class TestTextTruncation:
 
         # Lead text verification
         for i, chunk in enumerate(chunks):
-            assert (
-                chunk[:17] == "search_document: "
-            ), f"Chunk {i} does not begin with proper lead text: {chunk[:10]}"
+            assert chunk[:17] == "search_document: ", (
+                f"Chunk {i} does not begin with proper lead text: {chunk[:10]}"
+            )
 
         original_content = sent_tokenize(sample_text)
         chunks = [s.replace("search_document: ", "").strip() for s in chunks]
@@ -370,30 +370,32 @@ class TestTextTruncation:
         # Sentence truncation verification
         for i, chunk in enumerate(chunks):
             if i == 5:
-                assert (
-                    chunk.strip()[-1] == "."
-                ), f"Full sentence chunk does not end with proper punctuation: {chunk[-10:]}"
+                assert chunk.strip()[-1] == ".", (
+                    f"Full sentence chunk does not end with proper punctuation: {chunk[-10:]}"
+                )
             else:
                 assert chunk.strip()[-1] not in {
                     ".",
                     "?",
                     "!",
                     '"',
-                }, f"Truncated sentence chunk should not end with punctuation: {chunk[-10:]}"
+                }, (
+                    f"Truncated sentence chunk should not end with punctuation: {chunk[-10:]}"
+                )
 
         # Content preservation & transition
-        assert len(original_content) == len(
-            chunks
-        ), "Sentence was lost during chunking"
+        assert len(original_content) == len(chunks), (
+            "Sentence was lost during chunking"
+        )
 
         for i in range(len(chunks) - 1):
             assert (
                 original_content[i][:10].strip() == chunks[i][:10].strip()
             ), "Content was altered during chunking"
             next_chunk = chunks[i + 1].strip()
-            assert next_chunk[
-                0
-            ].isupper(), f"Chunk {i + 1} does not start with uppercase letter"
+            assert next_chunk[0].isupper(), (
+                f"Chunk {i + 1} does not start with uppercase letter"
+            )
 
 
 class TestSentenceOverlap:
@@ -415,16 +417,16 @@ class TestSentenceOverlap:
         tokenizer = test_service.tokenizer
 
         # Basic properties
-        assert (
-            test_service.max_tokens == max_tokens
-        ), "Incorrect max_tokens in test_service"
+        assert test_service.max_tokens == max_tokens, (
+            "Incorrect max_tokens in test_service"
+        )
         assert test_service.num_overlap_sentences == int(
             max_tokens * overlap_ratio
         ), "Incorrect overlap_ratio in test_service"
         assert len(chunks) > 0, "No chunks were generated"
-        assert all(
-            isinstance(chunk, str) for chunk in chunks
-        ), "Non-string chunk found"
+        assert all(isinstance(chunk, str) for chunk in chunks), (
+            "Non-string chunk found"
+        )
         assert all(
             len(tokenizer.encode(chunk)) <= test_service.max_tokens
             for chunk in chunks
@@ -432,9 +434,9 @@ class TestSentenceOverlap:
 
         # Lead text verification
         for i, chunk in enumerate(chunks):
-            assert (
-                chunk[:17] == "search_document: "
-            ), f"Chunk {i} does not begin with proper lead text: {chunk[:10]}"
+            assert chunk[:17] == "search_document: ", (
+                f"Chunk {i} does not begin with proper lead text: {chunk[:10]}"
+            )
 
         original_content = sent_tokenize(sample_text)
         chunks = [s.replace("search_document: ", "").strip() for s in chunks]
@@ -450,16 +452,14 @@ class TestSentenceOverlap:
             assert all(
                 sent.strip() for sent in chunk.split(".") if sent.strip()
             ), f"Chunk {i} contains incomplete sentences"
-            assert chunk[
-                0
-            ].isupper(), (
+            assert chunk[0].isupper(), (
                 f"Chunk {i} does not start with uppercase letter: {chunk[:10]}"
             )
 
         # Content preservation
-        assert (
-            original_content[0][:10].strip() == chunks[0][:10].strip()
-        ), "Beginning of the content was altered during chunking"
+        assert original_content[0][:10].strip() == chunks[0][:10].strip(), (
+            "Beginning of the content was altered during chunking"
+        )
 
         assert (
             original_content[-1][-10:].strip() == chunks[-1][-10:].strip()
