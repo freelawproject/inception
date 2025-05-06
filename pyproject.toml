@@ -19,7 +19,7 @@ dependencies = [
     "pydantic-settings<3.0.0,>=2.0.3",
     "nltk<4.0.0,>=3.8.1",
     "numpy<2.3.0,>=1.26.1",
-    "gunicorn<22.0.0,>=21.2.0",
+    "gunicorn>=21.2.0,<24.0.0",
     "prometheus-client<1.0.0,>=0.19.0",
     "sentry-sdk[fastapi]<2.0.0,>=1.32.0",
 ]
