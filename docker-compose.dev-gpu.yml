@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   inception-embedding-service:
     container_name: inception-embedding-service
