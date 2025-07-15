@@ -63,7 +63,7 @@ Model Settings:
 
 - `MAX_QUERY_LENGTH`
 
-    Default: `100`
+    Default: `1000`
 
     The maximum allowable length (in characters) for a query text.
 
