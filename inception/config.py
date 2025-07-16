@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         description="Ratio to calculate number of sentence overlap between chunks",
     )
     min_text_length: int = 1
-    max_query_length: int = 100
+    max_query_length: int = 1000
     max_text_length: int = 10_000_000
     max_batch_size: int = 100
     processing_batch_size: int = 8

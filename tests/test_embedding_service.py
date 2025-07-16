@@ -133,7 +133,10 @@ class TestInputValidation:
     def test_query_embedding_validation(self, client):
         """Test query endpoint input validation."""
 
-        long_query = "Pellentesque tellus felis cursus id velit ac feugiat rutrum massa Mauris dapibus fermentum sagittis Donec viverra mauris a velit"
+        long_query = (
+            "Pellentesque tellus felis cursus id velit ac feugiat rutrum massa Mauris dapibus fermentum sagittis Donec viverra mauris a velit ac quam consectetur, a facilisis enim eleifend."
+            * 10
+        )
         test_cases = [
             {
                 "name": "short text",
