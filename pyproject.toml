@@ -21,7 +21,7 @@ dependencies = [
     "numpy<2.3.0,>=1.26.1",
     "gunicorn<22.0.0,>=21.2.0",
     "prometheus-client<1.0.0,>=0.19.0",
-    "sentry-sdk[fastapi]<2.0.0,>=1.32.0",
+    "sentry-sdk[fastapi]>=1.32.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
