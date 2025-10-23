@@ -1,4 +1,5 @@
 import asyncio
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -13,6 +14,7 @@ from inception.schemas import ChunkEmbedding, TextResponse
 from inception.utils import logger, preprocess_text
 
 torch.set_float32_matmul_precision("high")
+thread_local = threading.local()
 
 
 class EmbeddingService:
@@ -47,17 +49,24 @@ class EmbeddingService:
             logger.error(f"Failed to initialize embedding service: {str(e)}")
             raise
 
+    def get_tokenizer(self) -> AutoTokenizer:
+        """Get the tokenizer instance for the current thread"""
+        if not hasattr(thread_local, "tokenizer"):
+            thread_local.tokenizer = self.tokenizer
+        return thread_local.tokenizer
+
     def split_text_into_chunks(self, text: str) -> list[str]:
         """Split text into chunks based on sentences, not exceeding max_tokens, with sentence overlap"""
 
         # Split the text to sentences & encode sentences with tokenizer
         sentences = sent_tokenize(text)
+        local_tokenizer = self.get_tokenizer()
         encoded_sentences = [
-            self.tokenizer.encode(sentence, add_special_tokens=False)
+            local_tokenizer.encode(sentence, add_special_tokens=False)
             for sentence in sentences
         ]
         lead_text = "search_document: "
-        lead_tokens = self.tokenizer.encode(lead_text)
+        lead_tokens = local_tokenizer.encode(lead_text)
         lead_len = len(lead_tokens)
         chunks = []
         current_chunks: list[str] = []
@@ -71,7 +80,7 @@ class EmbeddingService:
                 if current_chunks:
                     chunks.append(lead_text + " ".join(current_chunks))
                 # truncate the sentence and store the truncated sentence as its own chunk
-                truncated_sentence = self.tokenizer.decode(
+                truncated_sentence = local_tokenizer.decode(
                     sentence_tokens[: (self.max_tokens - len(lead_tokens))]
                 )
                 chunks.append(lead_text + truncated_sentence)
@@ -90,7 +99,7 @@ class EmbeddingService:
                 if current_chunks:
                     chunks.append(lead_text + " ".join(current_chunks))
 
-                overlap_token_counts = self.tokenizer.encode(
+                overlap_token_counts = local_tokenizer.encode(
                     " ".join(overlap_sentences), add_special_tokens=False
                 )
                 # If the sentence with the overlap exceeds the limit, start a new chunk without overlap.
@@ -98,11 +107,11 @@ class EmbeddingService:
                     lead_len + len(overlap_token_counts) + sentence_len
                     > self.max_tokens
                 ):
-                    current_chunks = [self.tokenizer.decode(sentence_tokens)]
+                    current_chunks = [local_tokenizer.decode(sentence_tokens)]
                     current_token_counts = lead_len + sentence_len
                 else:
                     current_chunks = overlap_sentences + [
-                        self.tokenizer.decode(sentence_tokens)
+                        local_tokenizer.decode(sentence_tokens)
                     ]
                     current_token_counts = (
                         lead_len + len(overlap_token_counts) + sentence_len
@@ -110,7 +119,7 @@ class EmbeddingService:
                 continue
 
             # if within max_tokens, continue to add the new sentence to the current chunk
-            current_chunks.append(self.tokenizer.decode(sentence_tokens))
+            current_chunks.append(local_tokenizer.decode(sentence_tokens))
             current_token_counts += len(sentence_tokens)
 
         # store the last chunk if it has any content
