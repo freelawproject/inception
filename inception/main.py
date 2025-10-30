@@ -18,21 +18,39 @@ from inception.config import settings
 from inception.embedding_service import EmbeddingService
 from inception.utils import logger
 
-try:
-    nltk.data.find("tokenizers/punkt_tab")
-except (LookupError, zipfile.BadZipFile):
-    nltk.download("punkt", quiet=True)
-    nltk.download("punkt_tab", quiet=True)
-except FileExistsError:
-    nltk.data.find("tokenizers/punkt_tab")
-
-
 # Initialize Sentry
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN"),
     integrations=[FastApiIntegration()],
     traces_sample_rate=1.0,
 )
+
+
+# Ensure NLTK punkt tokenizer is available & handle edge cases
+def handle_nltk_download(resource_name: str) -> None:
+    """
+    Ensures the specified NLTK resource is available & ready for use.
+    Store the resource in persistent volume to avoid repeated downloads and race conditions between processes
+
+    :param resource_name: The name of the NLTK resource to be checked and downloaded if necessary.
+    :return: None
+    """
+    resource_path = (
+        f"{os.getenv('HF_HOME')}/nltk_data/tokenizers/{resource_name}"
+    )
+    try:
+        nltk.data.find(resource_path).open().read(
+            10
+        )  # Attempt to read a small portion of the file
+    except LookupError:
+        nltk.download(resource_name, quiet=True)
+    except (EOFError, OSError, zipfile.BadZipFile):
+        os.remove(resource_path)  # Remove the corrupted file
+        nltk.download(resource_name, quiet=True)
+
+
+handle_nltk_download("punkt")
+handle_nltk_download("punkt_tab")
 
 embedding_service = None
 
