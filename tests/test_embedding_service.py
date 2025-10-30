@@ -4,7 +4,6 @@ Covers health checks, embedding generation, input validation, batch processing,
 GPU memory management, and text processing.
 """
 
-import os
 from http import HTTPStatus
 from unittest import mock
 
@@ -86,9 +85,7 @@ class TestNLTKDownload:
         with mock.patch("nltk.data.find") as mock_find:
             mock_find.return_value.open.return_value.read.return_value = "test"
             handle_nltk_download("punkt")
-            mock_find.assert_called_once_with(
-                f"{os.getenv('HF_HOME')}/nltk_data/tokenizers/punkt"
-            )
+            mock_find.assert_called_once_with("punkt")
 
     @pytest.mark.nltk
     def test_resource_not_found_download(self):
@@ -105,13 +102,11 @@ class TestNLTKDownload:
         """Test when the resource is invalid and needs to be removed and redownloaded."""
         with (
             mock.patch("nltk.data.find", side_effect=OSError),
-            mock.patch("os.remove") as mock_remove,
+            mock.patch("shutil.rmtree") as mock_remove,
             mock.patch("nltk.download") as mock_download,
         ):
             handle_nltk_download("punkt")
-            mock_remove.assert_called_once_with(
-                f"{os.getenv('HF_HOME')}/nltk_data/tokenizers/punkt"
-            )
+            mock_remove.assert_called_once_with("punkt")
             mock_download.assert_called_once_with("punkt", quiet=True)
 
 

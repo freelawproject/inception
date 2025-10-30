@@ -1,8 +1,10 @@
 import asyncio
 import os
+import shutil
 import zipfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import nltk
 import sentry_sdk
@@ -30,25 +32,23 @@ sentry_sdk.init(
 def handle_nltk_download(resource_name: str) -> None:
     """
     Ensures the specified NLTK resource is available & ready for use.
-    Store the resource in persistent volume to avoid repeated downloads and race conditions between processes
+    Store the resource in persistent volume to avoid repeated downloads and race conditions between processes.
 
     :param resource_name: The name of the NLTK resource to be checked and downloaded if necessary.
     :return: None
     """
-    resource_path = (
-        f"{os.getenv('HF_HOME')}/nltk_data/tokenizers/{resource_name}"
-    )
     try:
-        nltk.data.find(resource_path).open().read(
-            10
-        )  # Attempt to read a small portion of the file
+        nltk.data.find(resource_name).open().read(10)
     except LookupError:
         nltk.download(resource_name, quiet=True)
     except (EOFError, OSError, zipfile.BadZipFile):
-        os.remove(resource_path)  # Remove the corrupted file
+        shutil.rmtree(resource_name)
         nltk.download(resource_name, quiet=True)
 
 
+nltk.data.path.append(
+    str(Path(os.getenv("HF_HOME", ".")) / "nltk_data" / "tokenizers")
+)
 handle_nltk_download("punkt")
 handle_nltk_download("punkt_tab")
 
