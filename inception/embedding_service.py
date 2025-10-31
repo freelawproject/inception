@@ -1,6 +1,7 @@
 import asyncio
 import threading
 import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import torch
@@ -60,14 +61,12 @@ class EmbeddingService:
             thread_local.tokenizer = self.tokenizer
         return thread_local.tokenizer
 
-    def handle_sent_tokenize(self, text: str) -> list[str]:
+    @staticmethod
+    def handle_sent_tokenize(text: str) -> list[str]:
         """Tokenizes the given text into sentences, retrying on failure."""
         try:
             return sent_tokenize(text)
-        except Exception as e:
-            logger.warning(
-                f"Sentence tokenization failed: {str(e)}. Redownloading NLTK resources."
-            )
+        except (zipfile.BadZipFile, LookupError):
             download_nltk_resources()
             try:
                 verify_nltk_resources()
