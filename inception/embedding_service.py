@@ -11,7 +11,12 @@ from transformers import AutoTokenizer
 from inception.config import settings
 from inception.metrics import CHUNK_COUNT, MODEL_LOAD_TIME
 from inception.schemas import ChunkEmbedding, TextResponse
-from inception.utils import logger, preprocess_text
+from inception.utils import (
+    download_nltk_resources,
+    logger,
+    preprocess_text,
+    verify_nltk_resources,
+)
 
 torch.set_float32_matmul_precision("high")
 thread_local = threading.local()
@@ -55,11 +60,29 @@ class EmbeddingService:
             thread_local.tokenizer = self.tokenizer
         return thread_local.tokenizer
 
+    def handle_sent_tokenize(self, text: str) -> list[str]:
+        """Tokenizes the given text into sentences, retrying on failure."""
+        try:
+            return sent_tokenize(text)
+        except Exception as e:
+            logger.warning(
+                f"Sentence tokenization failed: {str(e)}. Redownloading NLTK resources."
+            )
+            download_nltk_resources()
+            try:
+                verify_nltk_resources()
+                return sent_tokenize(text)
+            except Exception as e:
+                logger.error(
+                    f"Sentence tokenization failed after retry: {str(e)}"
+                )
+                raise
+
     def split_text_into_chunks(self, text: str) -> list[str]:
         """Split text into chunks based on sentences, not exceeding max_tokens, with sentence overlap"""
 
         # Split the text to sentences & encode sentences with tokenizer
-        sentences = sent_tokenize(text)
+        sentences = self.handle_sent_tokenize(text)
         local_tokenizer = self.get_tokenizer()
         encoded_sentences = [
             local_tokenizer.encode(sentence, add_special_tokens=False)

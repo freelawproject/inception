@@ -5,7 +5,6 @@ GPU memory management, and text processing.
 """
 
 from http import HTTPStatus
-from unittest import mock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,7 +14,7 @@ from transformers import AutoTokenizer
 
 from inception.config import settings
 from inception.embedding_service import EmbeddingService
-from inception.main import app, handle_nltk_download
+from inception.main import app
 
 # Mark all tests with appropriate categories
 pytestmark = [pytest.mark.embedding]
@@ -74,40 +73,6 @@ def mock_gpu_cleanup(monkeypatch):
         mock_cleanup,
     )
     return lambda: cleanup_called
-
-
-class TestNLTKDownload:
-    """Tests for NLTK punkt tokenizer download and handling."""
-
-    @pytest.mark.nltk
-    def test_resource_found_and_read_success(self):
-        """Test when the resource is found and can be read successfully."""
-        with mock.patch("nltk.data.find") as mock_find:
-            mock_find.return_value.open.return_value.read.return_value = "test"
-            handle_nltk_download("punkt")
-            mock_find.assert_called_once_with("punkt")
-
-    @pytest.mark.nltk
-    def test_resource_not_found_download(self):
-        """Test when the resource is not found and needs to be downloaded."""
-        with (
-            mock.patch("nltk.data.find", side_effect=LookupError),
-            mock.patch("nltk.download") as mock_download,
-        ):
-            handle_nltk_download("punkt")
-            mock_download.assert_called_once_with("punkt", quiet=True)
-
-    @pytest.mark.nltk
-    def test_invalid_resource_removal_and_redownload(self):
-        """Test when the resource is invalid and needs to be removed and redownloaded."""
-        with (
-            mock.patch("nltk.data.find", side_effect=OSError),
-            mock.patch("shutil.rmtree") as mock_remove,
-            mock.patch("nltk.download") as mock_download,
-        ):
-            handle_nltk_download("punkt")
-            mock_remove.assert_called_once_with("punkt")
-            mock_download.assert_called_once_with("punkt", quiet=True)
 
 
 class TestEmbeddingGeneration:

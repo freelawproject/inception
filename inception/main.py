@@ -1,12 +1,8 @@
 import asyncio
 import os
-import shutil
-import zipfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
-import nltk
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +14,10 @@ from transformers import AutoTokenizer
 from inception import routes
 from inception.config import settings
 from inception.embedding_service import EmbeddingService
-from inception.utils import logger
+from inception.utils import handle_nltk_download, logger
+
+# Ensure NLTK resources are available
+handle_nltk_download()
 
 # Initialize Sentry
 sentry_sdk.init(
@@ -26,31 +25,6 @@ sentry_sdk.init(
     integrations=[FastApiIntegration()],
     traces_sample_rate=1.0,
 )
-
-
-# Ensure NLTK punkt tokenizer is available & handle edge cases
-def handle_nltk_download(resource_name: str) -> None:
-    """
-    Ensures the specified NLTK resource is available & ready for use.
-    Store the resource in persistent volume to avoid repeated downloads and race conditions between processes.
-
-    :param resource_name: The name of the NLTK resource to be checked and downloaded if necessary.
-    :return: None
-    """
-    try:
-        nltk.data.find(resource_name).open().read(10)
-    except LookupError:
-        nltk.download(resource_name, quiet=True)
-    except (EOFError, OSError, zipfile.BadZipFile):
-        shutil.rmtree(resource_name)
-        nltk.download(resource_name, quiet=True)
-
-
-nltk.data.path.append(
-    str(Path(os.getenv("HF_HOME", ".")) / "nltk_data" / "tokenizers")
-)
-handle_nltk_download("punkt")
-handle_nltk_download("punkt_tab")
 
 embedding_service = None
 
