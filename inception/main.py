@@ -1,10 +1,8 @@
 import asyncio
 import os
-import zipfile
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-import nltk
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,16 +14,10 @@ from transformers import AutoTokenizer
 from inception import routes
 from inception.config import settings
 from inception.embedding_service import EmbeddingService
-from inception.utils import logger
+from inception.utils import handle_nltk_download, logger
 
-try:
-    nltk.data.find("tokenizers/punkt_tab")
-except (LookupError, zipfile.BadZipFile):
-    nltk.download("punkt", quiet=True)
-    nltk.download("punkt_tab", quiet=True)
-except FileExistsError:
-    nltk.data.find("tokenizers/punkt_tab")
-
+# Ensure NLTK resources are available
+handle_nltk_download()
 
 # Initialize Sentry
 sentry_sdk.init(

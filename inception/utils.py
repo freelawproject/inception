@@ -1,7 +1,9 @@
 import logging
 import re
+import zipfile
 from http import HTTPStatus
 
+import nltk
 from fastapi import HTTPException
 from torch.cuda import OutOfMemoryError
 
@@ -13,6 +15,24 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def download_nltk_resources():
+    nltk.download("punkt", quiet=True, force=True)
+    nltk.download("punkt_tab", quiet=True, force=True)
+
+
+def verify_nltk_resources():
+    nltk.data.find("tokenizers/punkt_tab")
+
+
+def handle_nltk_download():
+    try:
+        verify_nltk_resources()
+    except (LookupError, zipfile.BadZipFile):
+        download_nltk_resources()
+    except FileExistsError:
+        verify_nltk_resources()
 
 
 def clean_text_for_json(text: str) -> str | None:
