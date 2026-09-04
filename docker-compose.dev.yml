@@ -6,7 +6,7 @@ services:
       args:
         TARGET_ENV: dev
     ports:
-      - "8005:8005"
+      - "127.0.0.1:8005:8005"
     volumes:
       - .:/app
     env_file:
